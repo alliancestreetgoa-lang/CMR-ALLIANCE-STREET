@@ -1,0 +1,146 @@
+Build a full-stack internal ERP system for an accounting firm.
+
+Company Name: Alliance Street Accounting Private Limited
+
+Purpose:
+Replace Excel-based compliance tracking and assignment tracking with a structured web application.
+
+Tech Stack:
+- Frontend: React
+- Backend: Node.js + Express
+- Database: PostgreSQL
+- Authentication: JWT
+- Role-based access control
+
+User Roles:
+1. Super Admin (Managing Director)
+2. Admin (Senior Accountant)
+3. Employee (Junior Accountant)
+
+-----------------------------------
+DATABASE STRUCTURE
+-----------------------------------
+
+1. Users Table:
+- id
+- name
+- email
+- password (hashed)
+- role (super_admin, admin, employee)
+
+2. Clients Table:
+- id
+- company_name
+- country (UK / UAE)
+- license_expiry_date
+- corporate_tax_start_month
+- corporate_tax_end_month
+- corporate_tax_due_date
+- created_at
+
+3. VAT Table:
+- id
+- client_id (foreign key)
+- vat_quarter (Q1, Q2, Q3, Q4)
+- vat_period_start
+- vat_period_end
+- vat_due_date
+- vat_status (Not Started, In Progress, Filed, Completed)
+
+4. Tasks Table (From your second Excel):
+- id
+- client_id
+- assigned_to (user_id)
+- assigned_by (admin_id)
+- assignment_date
+- description
+- priority (Normal, High, Emergency)
+- status (Not Started, In Process, Completed)
+- comments
+- due_date
+
+5. Audit Logs Table:
+- id
+- user_id
+- action_type
+- description
+- timestamp
+
+-----------------------------------
+DASHBOARDS
+-----------------------------------
+
+SUPER ADMIN DASHBOARD:
+- Total Clients
+- Clients by Country
+- Upcoming Deadlines (Next 30 Days)
+- Overdue CT & VAT
+- Employee Workload Chart
+- Priority Distribution
+- Status Distribution
+- Admin performance tracking
+
+ADMIN DASHBOARD:
+- Add/Edit Clients
+- Create VAT cycles automatically
+- Assign Tasks to Employees
+- Change Priority
+- Update Deadlines
+- Filter by:
+    - Country
+    - Employee
+    - Status
+    - Deadline
+- Workload counter per employee
+
+EMPLOYEE DASHBOARD:
+- View assigned tasks
+- Update status
+- Add comments
+- See upcoming VAT / CT deadlines
+- Highlight Emergency tasks
+- Mark Completed
+
+-----------------------------------
+AUTOMATION FEATURES
+-----------------------------------
+
+1. Automatically mark:
+   - Overdue deadlines in red
+   - Deadlines within 15 days in yellow
+
+2. When new client is added:
+   - Auto-create 4 VAT quarters
+
+3. Monthly compliance tracker:
+   - Auto generate Jan–Dec checklist for each client
+
+4. Excel Import:
+   - Allow Admin to upload Excel
+   - Map columns automatically
+   - Clean merged columns
+   - Store structured data in database
+
+-----------------------------------
+UI REQUIREMENTS
+-----------------------------------
+
+- Professional accounting firm theme (blue/grey)
+- Sidebar navigation
+- KPI Cards
+- Charts (Chart.js)
+- Responsive design
+- Search + Filters
+- Table sorting
+- Pagination
+
+-----------------------------------
+DELIVER:
+-----------------------------------
+
+- Full project folder structure
+- Backend APIs
+- Database schema
+- Sample seed data
+- Instructions to run
+- Clean production-ready code
