@@ -1,3 +1,5 @@
+const BASE_URL = import.meta.env.VITE_API_URL || "";
+
 function getToken(): string | null {
   return localStorage.getItem("erp_token");
 }
@@ -16,7 +18,10 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
     headers["Content-Type"] = "application/json";
   }
 
-  const res = await fetch(url, { ...options, headers });
+  // Ensure absolute URL if BASE_URL is provided, otherwise relative
+  const fullUrl = url.startsWith("http") ? url : `${BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+
+  const res = await fetch(fullUrl, { ...options, headers });
   
   if (res.status === 401) {
     localStorage.removeItem("erp_token");
