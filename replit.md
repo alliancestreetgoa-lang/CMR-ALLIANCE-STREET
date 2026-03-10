@@ -82,6 +82,28 @@ The server serves the Vite dev server in development and static files from `dist
 - **Build**: `npm run build` runs Vite build (client) + esbuild (server) → outputs to `dist/`
 - **Production**: `npm start` serves the built app from `dist/`
 
+## Deployment Guides
+
+### Railway Deployment
+1. Connect your GitHub repository to Railway
+2. Railway will automatically detect Node.js and build the app
+3. Set environment variables in Railway dashboard:
+   - `DATABASE_URL` - PostgreSQL connection string (Railway PostgreSQL plugin or external)
+   - `JWT_SECRET` - Secret key for JWT tokens
+   - `NODE_ENV` - Set to `production`
+4. Railway will automatically:
+   - Install dependencies
+   - Run `npm run build` (configured in Procfile)
+   - Start the app with `npm start`
+   - Assign a public domain and SSL certificate
+
+### Netlify + Replit Backend
+If hosting frontend on Netlify and backend on Replit:
+1. Deploy backend to Replit (already configured)
+2. Deploy frontend to Netlify (static build)
+3. Set Netlify environment variable: `VITE_API_URL=https://your-replit-app.replit.app`
+4. The frontend will proxy API calls to the Replit backend
+
 ## External Dependencies
 
 ### Required Services
