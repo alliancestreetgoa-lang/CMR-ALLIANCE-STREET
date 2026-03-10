@@ -97,12 +97,36 @@ The server serves the Vite dev server in development and static files from `dist
    - Start the app with `npm start`
    - Assign a public domain and SSL certificate
 
-### Netlify + Replit Backend
-If hosting frontend on Netlify and backend on Replit:
-1. Deploy backend to Replit (already configured)
-2. Deploy frontend to Netlify (static build)
-3. Set Netlify environment variable: `VITE_API_URL=https://your-replit-app.replit.app`
-4. The frontend will proxy API calls to the Replit backend
+### Netlify + Replit Backend (Recommended for Hybrid Setup)
+
+This is the recommended setup: frontend on Netlify (fast CDN), backend on Replit (database + API).
+
+#### Step 1: Deploy Backend on Replit
+1. The backend is already configured in Replit
+2. Your app runs on `https://your-repl-name.replit.app`
+3. Database: Set `DATABASE_URL` in Replit Secrets
+4. Keep the backend running 24/7 on Replit
+
+#### Step 2: Deploy Frontend on Netlify
+1. Connect your GitHub repo to Netlify (it auto-detects the `netlify.toml`)
+2. Set environment variable in Netlify:
+   - **Key**: `VITE_API_URL`
+   - **Value**: `https://your-repl-name.replit.app`
+3. Netlify automatically:
+   - Runs `npm run build:frontend` (frontend-only build)
+   - Publishes `dist/public` folder
+   - Assigns a public domain with HTTPS
+
+#### Step 3: How It Works
+- Frontend runs on `https://your-netlify-site.netlify.app`
+- API calls go to `https://your-repl-name.replit.app/api/*`
+- CORS is enabled on Replit backend for cross-domain requests
+- JWT tokens stored in browser localStorage
+- Database stays on Replit
+
+#### Build Scripts Available
+- `npm run build` — Full build (client + server, for Replit deployment)
+- `npm run build:frontend` — Frontend only (used by Netlify)
 
 ## External Dependencies
 
