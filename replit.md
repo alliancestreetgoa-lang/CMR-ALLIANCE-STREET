@@ -128,6 +128,32 @@ This is the recommended setup: frontend on Netlify (fast CDN), backend on Replit
 - `npm run build` — Full build (client + server, for Replit deployment)
 - `npm run build:frontend` — Frontend only (used by Netlify)
 
+### Hostinger Node.js Deployment
+
+Hostinger is a simple, cost-effective option for full-stack deployment.
+
+#### Quick Setup
+1. Connect your GitHub repository to Hostinger
+2. Hostinger auto-detects Node.js and uses your `package.json` scripts
+3. Set environment variables:
+   - `DATABASE_URL` — PostgreSQL connection
+   - `JWT_SECRET` — Secret for JWT tokens
+   - `NODE_ENV` — Set to `production`
+4. Deploy and get a public domain with SSL
+
+#### How It Works
+- **Build**: Hostinger runs `npm run build`
+- **Start**: Hostinger runs `npm start`
+- **Port**: Automatically assigned (app uses PORT env var)
+- **Domain**: Public domain + free SSL included
+
+#### Node.js Version
+- Required: Node.js 20+
+- `.nvmrc` file specifies version 20
+- Hostinger reads this file automatically
+
+See `HOSTINGER_DEPLOYMENT.md` for detailed instructions.
+
 ## External Dependencies
 
 ### Required Services
