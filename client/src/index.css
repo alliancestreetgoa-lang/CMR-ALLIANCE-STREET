@@ -453,3 +453,136 @@
 .gold-text-glow {
   text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   PRINT — SALARY SLIP (global override for dark theme)
+───────────────────────────────────────────────────────────────────────────── */
+@media print {
+  :root {
+    --background: 0 0% 100% !important;
+    --foreground: 0 0% 7% !important;
+    --card: 0 0% 100% !important;
+    --card-foreground: 0 0% 7% !important;
+    --popover: 0 0% 100% !important;
+    --popover-foreground: 0 0% 7% !important;
+    --muted: 210 20% 96% !important;
+    --muted-foreground: 215 16% 40% !important;
+    --border: 214 20% 85% !important;
+    --input: 214 20% 85% !important;
+    --secondary: 210 20% 96% !important;
+    --secondary-foreground: 0 0% 7% !important;
+    --accent: 210 20% 96% !important;
+    --accent-foreground: 0 0% 7% !important;
+  }
+
+  html, body, #root {
+    background: #ffffff !important;
+    color: #111111 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .salary-slip-print,
+  .salary-slip-print *,
+  .salary-slip-print *::before,
+  .salary-slip-print *::after {
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .salary-slip-print {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    padding: 20px !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    color: #111111 !important;
+    font-size: 11px !important;
+    font-family: 'Inter', Arial, sans-serif !important;
+    z-index: 999999 !important;
+  }
+
+  .salary-slip-print *:not(.bg-green-100):not(.bg-red-100):not(.bg-yellow-100):not(.bg-orange-100):not(.bg-slate-100):not(.bg-purple-100):not(.bg-gray-50):not([class*="bg-green"]):not([class*="bg-red"]):not([class*="bg-yellow"]):not([class*="bg-orange"]):not([class*="bg-slate"]):not([class*="bg-purple"]):not([class*="bg-gray"]) {
+    background-color: transparent !important;
+  }
+
+  .salary-slip-print > div {
+    background: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 6px !important;
+  }
+
+  .salary-slip-print h2,
+  .salary-slip-print h3,
+  .salary-slip-print h4,
+  .salary-slip-print p,
+  .salary-slip-print span,
+  .salary-slip-print div,
+  .salary-slip-print label,
+  .salary-slip-print strong,
+  .salary-slip-print b,
+  .salary-slip-print td,
+  .salary-slip-print th {
+    color: #111111 !important;
+  }
+
+  .salary-slip-print [class*="text-muted"],
+  .salary-slip-print [class*="text-sidebar"],
+  .salary-slip-print [class*="opacity-"] {
+    color: #555555 !important;
+    opacity: 1 !important;
+  }
+
+  .salary-slip-print [class*="text-primary"],
+  .salary-slip-print [class*="text-destructive"] {
+    color: #dc2626 !important;
+  }
+
+  .salary-slip-print [class*="border"] {
+    border-color: #d1d5db !important;
+  }
+
+  .salary-slip-print [class*="border-red"],
+  .salary-slip-print [class*="border-destructive"] {
+    border-color: #dc2626 !important;
+  }
+
+  .salary-slip-print td,
+  .salary-slip-print th {
+    border-color: #e5e7eb !important;
+  }
+
+  .salary-slip-print [class*="bg-green"] { background-color: #d1fae5 !important; }
+  .salary-slip-print [class*="bg-red"] { background-color: #fee2e2 !important; }
+  .salary-slip-print [class*="bg-yellow"] { background-color: #fef9c3 !important; }
+  .salary-slip-print [class*="bg-orange"] { background-color: #ffedd5 !important; }
+  .salary-slip-print [class*="bg-slate"] { background-color: #f1f5f9 !important; }
+  .salary-slip-print [class*="bg-purple"] { background-color: #f3e8ff !important; }
+  .salary-slip-print [class*="bg-gray"] { background-color: #f9fafb !important; }
+
+  .salary-slip-print [class*="text-green"] { color: #166534 !important; }
+  .salary-slip-print [class*="text-red"]:not([class*="text-primary"]) { color: #991b1b !important; }
+  .salary-slip-print [class*="text-yellow"] { color: #854d0e !important; }
+  .salary-slip-print [class*="text-orange"] { color: #9a3412 !important; }
+  .salary-slip-print [class*="text-slate"] { color: #1e293b !important; }
+  .salary-slip-print [class*="text-purple"] { color: #6b21a8 !important; }
+
+  button,
+  [data-testid="button-print-slip"],
+  [data-testid="button-download-slip-pdf"] {
+    display: none !important;
+  }
+
+  [role="dialog"] > button,
+  [role="dialog"] > [class*="absolute"] {
+    display: none !important;
+  }
+}
