@@ -136,36 +136,12 @@ export default function TerminalDashboard() {
   }).length;
 
   const kpis = [
-    {
-      label: "TOTAL_CLIENTS",
-      value: clientsLoading ? "…" : String(clients.length),
-      status: "good",
-    },
-    {
-      label: "ACTIVE_CLIENTS",
-      value: clientsLoading ? "…" : String(activeClientCount),
-      status: "good",
-    },
-    {
-      label: "TOTAL_TASKS",
-      value: tasksLoading ? "…" : String(totalTaskCount),
-      status: "warning",
-    },
-    {
-      label: "OVERDUE",
-      value: tasksLoading ? "…" : String(overdueTaskCount),
-      status: overdueTaskCount > 0 ? "critical" : "good",
-    },
-    {
-      label: "COMPLETED",
-      value: statsLoading ? "…" : String(stats?.doneTasks ?? 0),
-      status: "good",
-    },
-    {
-      label: "EMPLOYEES",
-      value: statsLoading ? "…" : String(stats?.totalEmployees ?? 0),
-      status: "good",
-    },
+    { label: "TOTAL_CLIENTS", value: clientsLoading ? "…" : String(clients.length), status: "good", path: "/clients" },
+    { label: "ACTIVE_CLIENTS", value: clientsLoading ? "…" : String(activeClientCount), status: "good", path: "/clients" },
+    { label: "TOTAL_TASKS", value: tasksLoading ? "…" : String(totalTaskCount), status: "warning", path: "/tasks" },
+    { label: "OVERDUE", value: tasksLoading ? "…" : String(overdueTaskCount), status: overdueTaskCount > 0 ? "critical" : "good", path: "/tasks" },
+    { label: "COMPLETED", value: statsLoading ? "…" : String(stats?.doneTasks ?? 0), status: "good", path: "/tasks" },
+    { label: "EMPLOYEES", value: statsLoading ? "…" : String(stats?.totalEmployees ?? 0), status: "good", path: "/hr" },
   ];
 
   const navItems = [
@@ -249,7 +225,12 @@ export default function TerminalDashboard() {
         <div className="h-[60px] flex-shrink-0 border-b border-gray-200 flex items-center px-4 overflow-x-auto bg-gray-50">
           <div className="flex items-center gap-8">
             {kpis.map((kpi, i) => (
-              <div key={i} className="flex flex-col flex-shrink-0" data-testid={`kpi-${kpi.label.toLowerCase()}`}>
+              <button
+                key={i}
+                data-testid={`kpi-${kpi.label.toLowerCase()}`}
+                onClick={() => setLocation(kpi.path)}
+                className="flex flex-col flex-shrink-0 text-left hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+              >
                 <span className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">
                   {kpi.label}
                 </span>
@@ -257,7 +238,7 @@ export default function TerminalDashboard() {
                   <span className="text-sm font-semibold">{kpi.value}</span>
                   <StatusDot status={kpi.status} />
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -267,7 +248,10 @@ export default function TerminalDashboard() {
 
           {/* Top Left: Client Roster */}
           <div className="bg-white flex flex-col min-h-0 overflow-hidden">
-            <div className="bg-gray-100 p-1 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
+            <div
+              className="bg-gray-100 p-1 border-b border-gray-200 flex justify-between items-center flex-shrink-0 cursor-pointer hover:bg-gray-200 transition-colors"
+              onClick={() => setLocation("/clients")}
+            >
               <span className="text-[10px] font-mono uppercase tracking-widest text-gray-600 ml-1">
                 CLIENT_ROSTER
               </span>
@@ -319,7 +303,10 @@ export default function TerminalDashboard() {
 
           {/* Top Right: Active Tasks */}
           <div className="bg-white flex flex-col min-h-0 overflow-hidden">
-            <div className="bg-gray-100 p-1 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
+            <div
+              className="bg-gray-100 p-1 border-b border-gray-200 flex justify-between items-center flex-shrink-0 cursor-pointer hover:bg-gray-200 transition-colors"
+              onClick={() => setLocation("/tasks")}
+            >
               <span className="text-[10px] font-mono uppercase tracking-widest text-gray-600 ml-1">
                 ACTIVE_TASKS
               </span>
@@ -381,7 +368,10 @@ export default function TerminalDashboard() {
 
           {/* Bottom Left: Workforce Metrics */}
           <div className="bg-white flex flex-col min-h-0 overflow-hidden">
-            <div className="bg-gray-100 p-1 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
+            <div
+              className="bg-gray-100 p-1 border-b border-gray-200 flex justify-between items-center flex-shrink-0 cursor-pointer hover:bg-gray-200 transition-colors"
+              onClick={() => setLocation("/hr")}
+            >
               <span className="text-[10px] font-mono uppercase tracking-widest text-gray-600 ml-1">
                 WORKFORCE_METRICS
               </span>
@@ -391,7 +381,10 @@ export default function TerminalDashboard() {
             </div>
             <div className="flex-1 overflow-auto p-2">
               <div className="grid grid-cols-2 gap-2 font-mono text-xs">
-                <div className="border border-gray-200 p-2">
+                <div
+                  className="border border-gray-200 p-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => setLocation("/hr")}
+                >
                   <div className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">
                     ROLE: EMPLOYEE
                   </div>
@@ -422,7 +415,10 @@ export default function TerminalDashboard() {
                   </div>
                 </div>
 
-                <div className="border border-gray-200 p-2">
+                <div
+                  className="border border-gray-200 p-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => setLocation("/hr")}
+                >
                   <div className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">
                     ROLE: ADMIN
                   </div>
@@ -453,7 +449,10 @@ export default function TerminalDashboard() {
                   </div>
                 </div>
 
-                <div className="border border-gray-200 p-2">
+                <div
+                  className="border border-gray-200 p-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => setLocation("/tasks")}
+                >
                   <div className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">
                     TASK_STATUS
                   </div>
@@ -473,7 +472,10 @@ export default function TerminalDashboard() {
                   </div>
                 </div>
 
-                <div className="border border-gray-200 p-2">
+                <div
+                  className="border border-gray-200 p-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => setLocation("/clients")}
+                >
                   <div className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">
                     SYSTEM_INFO
                   </div>
@@ -500,7 +502,10 @@ export default function TerminalDashboard() {
 
           {/* Bottom Right: System Event Log */}
           <div className="bg-white flex flex-col min-h-0 overflow-hidden">
-            <div className="bg-gray-100 p-1 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
+            <div
+              className="bg-gray-100 p-1 border-b border-gray-200 flex justify-between items-center flex-shrink-0 cursor-pointer hover:bg-gray-200 transition-colors"
+              onClick={() => setLocation("/activity")}
+            >
               <span className="text-[10px] font-mono uppercase tracking-widest text-gray-600 ml-1">
                 SYSTEM_EVENT_LOG
               </span>
@@ -527,7 +532,8 @@ export default function TerminalDashboard() {
                         <tr
                           key={log.id}
                           data-testid={`row-log-${log.id}`}
-                          className="border-b border-gray-200/50 hover:bg-gray-100 h-6 text-[10px]"
+                          className="border-b border-gray-200/50 hover:bg-gray-100 h-6 text-[10px] cursor-pointer"
+                          onClick={() => setLocation("/activity")}
                         >
                           <td className="py-0 px-2 text-gray-400 w-16 flex-shrink-0">
                             {formatLogTime(String(log.timestamp))}
