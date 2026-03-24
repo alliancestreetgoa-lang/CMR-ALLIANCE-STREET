@@ -30,7 +30,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Shield, ShieldAlert, User as UserIcon, Loader2, Pencil, Globe } from "lucide-react";
@@ -74,36 +73,37 @@ function CountryBadges({ value }: { value: string | null }) {
 function CountryCheckboxes({
   selected,
   onChange,
-  disabled,
 }: {
   selected: string[];
   onChange: (val: string[]) => void;
-  disabled?: boolean;
 }) {
   const toggle = (country: string) => {
-    if (selected.includes(country)) {
-      onChange(selected.filter((c) => c !== country));
-    } else {
-      onChange([...selected, country]);
-    }
+    const next = selected.includes(country)
+      ? selected.filter((c) => c !== country)
+      : [...selected, country];
+    onChange(next);
   };
 
   return (
-    <div className="flex gap-4">
-      {COUNTRIES.map((c) => (
-        <div key={c} className="flex items-center gap-2">
-          <Checkbox
-            id={`country-${c}`}
-            checked={selected.includes(c)}
-            onCheckedChange={() => toggle(c)}
-            disabled={disabled}
+    <div className="flex gap-2">
+      {COUNTRIES.map((c) => {
+        const active = selected.includes(c);
+        return (
+          <button
+            key={c}
+            type="button"
             data-testid={`checkbox-country-${c.toLowerCase()}`}
-          />
-          <Label htmlFor={`country-${c}`} className="font-normal cursor-pointer">
+            onClick={() => toggle(c)}
+            className={`px-4 py-1.5 rounded-md border text-sm font-medium transition-colors ${
+              active
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-background text-foreground border-border hover:bg-muted"
+            }`}
+          >
             {c}
-          </Label>
-        </div>
-      ))}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -299,7 +299,7 @@ export default function UsersPage() {
                     <div className="col-span-3 space-y-1">
                       <CountryCheckboxes selected={newCountries} onChange={setNewCountries} />
                       <p className="text-[11px] text-muted-foreground">
-                        Leave unchecked to grant access to all countries.
+                        Select one or both to restrict access. Leave both unselected for all countries.
                       </p>
                     </div>
                   </div>
@@ -430,7 +430,7 @@ export default function UsersPage() {
               <div className="col-span-3 space-y-1">
                 <CountryCheckboxes selected={editCountries} onChange={setEditCountries} />
                 <p className="text-[11px] text-muted-foreground">
-                  Leave unchecked to grant access to all countries.
+                  Select one or both to restrict access. Leave both unselected for all countries.
                 </p>
               </div>
             </div>
