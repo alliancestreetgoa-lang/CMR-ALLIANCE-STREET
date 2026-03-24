@@ -284,6 +284,9 @@ export default function UsersPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {currentUser?.role === "super_admin" && (
+                          <SelectItem value="super_admin">Super Admin</SelectItem>
+                        )}
+                        {currentUser?.role === "super_admin" && (
                           <SelectItem value="admin">Admin</SelectItem>
                         )}
                         <SelectItem value="employee">Employee</SelectItem>
@@ -414,6 +417,9 @@ export default function UsersPage() {
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
+                  {currentUser?.role === "super_admin" && (
+                    <SelectItem value="super_admin">Super Admin</SelectItem>
+                  )}
                   {currentUser?.role === "super_admin" && (
                     <SelectItem value="admin">Admin</SelectItem>
                   )}
