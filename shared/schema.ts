@@ -115,6 +115,18 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
 
+// ===== UK WEEKLY SCHEDULES =====
+export const ukWeeklySchedules = pgTable("uk_weekly_schedules", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  clientId: integer("client_id").notNull(),
+  taskName: text("task_name").notNull(),
+  days: text("days").notNull().default(""), // comma-separated: "Mon,Tue,Wed"
+});
+
+export const insertUkScheduleSchema = createInsertSchema(ukWeeklySchedules).omit({ id: true });
+export type InsertUkSchedule = z.infer<typeof insertUkScheduleSchema>;
+export type UkWeeklySchedule = typeof ukWeeklySchedules.$inferSelect;
+
 // ===== DIRECT MESSAGES =====
 export const directMessages = pgTable("direct_messages", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),

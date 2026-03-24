@@ -247,6 +247,35 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [notifications, loginPopupShown, unreadCount]);
 
+  // UK schedule: day-before reminder check (runs once per calendar day per session)
+  useEffect(() => {
+    if (!user) return;
+    const todayKey = `uk_reminder_checked_${new Date().toISOString().slice(0, 10)}`;
+    if (sessionStorage.getItem(todayKey)) return;
+    sessionStorage.setItem(todayKey, "1");
+    (async () => {
+      try {
+        const data = await api.get("/api/uk-schedule/reminders");
+        if (!data.reminders || data.reminders.length === 0) return;
+        // Group by client
+        const byClient: Record<number, { clientName: string; tasks: string[] }> = {};
+        for (const r of data.reminders) {
+          if (!byClient[r.clientId]) byClient[r.clientId] = { clientName: r.clientName, tasks: [] };
+          byClient[r.clientId].tasks.push(r.taskName);
+        }
+        for (const [, info] of Object.entries(byClient)) {
+          await api.post("/api/notifications", {
+            userId: user.id,
+            title: `Reminder: ${info.clientName}`,
+            message: `Tomorrow (${data.tomorrowDay}): ${info.tasks.join(", ")}`,
+            type: "reminder",
+          });
+        }
+        fetchNotifications();
+      } catch {}
+    })();
+  }, [user]);
+
   const fetchNotifications = async () => {
     try {
       const data = await api.get("/api/notifications");

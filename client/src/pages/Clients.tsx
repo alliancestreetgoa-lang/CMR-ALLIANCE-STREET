@@ -69,7 +69,73 @@ type VatRecord = {
   vatDueDate: string | null;
   status: "Not Started" | "In Progress" | "Filed" | "Completed" | "Overdue";
   assignedTo: number | null;
+  isActive: string | null;
 };
+
+// ===== UK WEEKLY SCHEDULE =====
+type ScheduleItem = { taskName: string; days: string[] };
+
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+
+const UK_TASK_DEFAULTS: ScheduleItem[] = [
+  { taskName: "DATA Sourcing", days: ["Fri"] },
+  { taskName: "DATA Entry", days: ["Mon", "Tue"] },
+  { taskName: "Bank Reconciliation", days: ["Wed", "Thu"] },
+  { taskName: "DATA Checks", days: ["Thu", "Fri"] },
+];
+
+function freshSchedule() {
+  return UK_TASK_DEFAULTS.map(t => ({ taskName: t.taskName, days: [...t.days] }));
+}
+
+function UkScheduleBuilder({ schedule, onChange }: { schedule: ScheduleItem[]; onChange: (s: ScheduleItem[]) => void }) {
+  const toggleDay = (idx: number, day: string) => {
+    onChange(schedule.map((item, i) => {
+      if (i !== idx) return item;
+      const days = item.days.includes(day)
+        ? item.days.filter(d => d !== day)
+        : [...item.days, day];
+      return { ...item, days };
+    }));
+  };
+  return (
+    <div className="space-y-2.5">
+      <div className="grid grid-cols-[140px_1fr] gap-2 mb-1">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Task</span>
+        <div className="flex gap-1">
+          {WEEKDAYS.map(d => (
+            <span key={d} className="w-9 text-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{d}</span>
+          ))}
+        </div>
+      </div>
+      {schedule.map((item, i) => (
+        <div key={item.taskName} className="grid grid-cols-[140px_1fr] gap-2 items-center">
+          <span className="text-xs font-medium text-foreground truncate" title={item.taskName}>{item.taskName}</span>
+          <div className="flex gap-1">
+            {WEEKDAYS.map(day => {
+              const active = item.days.includes(day);
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  data-testid={`sched-${i}-${day}`}
+                  onClick={() => toggleDay(i, day)}
+                  className={`w-9 h-7 rounded-md text-xs font-medium border transition-colors ${
+                    active
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background text-muted-foreground border-border hover:bg-muted"
+                  }`}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const emptyForm = {
   companyName: "",
@@ -122,6 +188,9 @@ export default function Clients() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [addSchedule, setAddSchedule] = useState<ScheduleItem[]>(freshSchedule());
+  const [editSchedule, setEditSchedule] = useState<ScheduleItem[]>(freshSchedule());
 
   const fetchData = async () => {
     try {
@@ -223,7 +292,7 @@ export default function Clients() {
   const handleAddClient = async () => {
     try {
       setSubmitting(true);
-      await api.post("/api/clients", {
+      const created = await api.post("/api/clients", {
         companyName: formData.companyName,
         country: formData.country,
         contactPerson: formData.contactPerson || null,
@@ -242,9 +311,15 @@ export default function Clients() {
           Q4: { start: formData.vatQ4Start || null, end: formData.vatQ4End || null, isActive: formData.vatQ4Active ? "true" : "false" },
         },
       });
+      if (formData.country === "UK" && created?.id) {
+        await api.put(`/api/clients/${created.id}/uk-schedule`, {
+          items: addSchedule.map(s => ({ taskName: s.taskName, days: s.days.join(",") })),
+        });
+      }
       toast({ title: "Client added successfully" });
       setDialogOpen(false);
       setFormData(emptyForm);
+      setAddSchedule(freshSchedule());
       fetchData();
     } catch (err: any) {
       toast({ title: "Error adding client", description: err.message, variant: "destructive" });
@@ -253,7 +328,7 @@ export default function Clients() {
     }
   };
 
-  const openEditDialog = (client: Client) => {
+  const openEditDialog = async (client: Client) => {
     setEditingClient(client);
     const clientVatRecords = vatRecords.filter(r => r.clientId === client.id);
     const getVatActive = (quarter: string) => {
@@ -285,6 +360,20 @@ export default function Clients() {
       vatQ4End: "",
       vatQ4Active: getVatActive("Q4"),
     });
+    if (client.country === "UK") {
+      try {
+        const existing = await api.get(`/api/clients/${client.id}/uk-schedule`);
+        const sched = UK_TASK_DEFAULTS.map(t => {
+          const found = existing.find((s: any) => s.taskName === t.taskName);
+          return { taskName: t.taskName, days: found && found.days ? found.days.split(",").filter(Boolean) : [...t.days] };
+        });
+        setEditSchedule(sched);
+      } catch {
+        setEditSchedule(freshSchedule());
+      }
+    } else {
+      setEditSchedule(freshSchedule());
+    }
     setEditDialogOpen(true);
   };
 
@@ -314,6 +403,12 @@ export default function Clients() {
         if (record && record.isActive !== isActive) {
           await api.patch(`/api/vat-records/${record.id}`, { isActive });
         }
+      }
+
+      if (editFormData.country === "UK") {
+        await api.put(`/api/clients/${editingClient.id}/uk-schedule`, {
+          items: editSchedule.map(s => ({ taskName: s.taskName, days: s.days.join(",") })),
+        });
       }
 
       toast({ title: "Client updated successfully" });
@@ -449,6 +544,16 @@ export default function Clients() {
                       })}
                     </div>
                   </div>
+
+                  {formData.country === "UK" && (
+                    <div className="border-t pt-4 mt-2">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Label className="text-sm font-semibold">Weekly Schedule</Label>
+                        <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">UK only — reminder sent day before</span>
+                      </div>
+                      <UkScheduleBuilder schedule={addSchedule} onChange={setAddSchedule} />
+                    </div>
+                  )}
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
@@ -687,7 +792,7 @@ export default function Clients() {
       </div>
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Client</DialogTitle>
             <DialogDescription>Update client information.</DialogDescription>
@@ -768,6 +873,16 @@ export default function Clients() {
                 })}
               </div>
             </div>
+
+            {editFormData.country === "UK" && (
+              <div className="border-t pt-4 mt-2">
+                <div className="flex items-center gap-2 mb-3">
+                  <Label className="text-sm font-semibold">Weekly Schedule</Label>
+                  <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">UK only — reminder sent day before</span>
+                </div>
+                <UkScheduleBuilder schedule={editSchedule} onChange={setEditSchedule} />
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancel</Button>

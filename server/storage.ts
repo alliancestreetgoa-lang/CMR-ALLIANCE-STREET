@@ -2,7 +2,7 @@ import { db, pool } from "./db";
 import { eq, and, desc, asc, or, sql } from "drizzle-orm";
 import {
   users, clients, vatRecords, tasks, auditLogs, notifications, directMessages,
-  attendanceRecords, salaryProfiles, salarySlips,
+  attendanceRecords, salaryProfiles, salarySlips, ukWeeklySchedules,
   type User, type InsertUser,
   type Client, type InsertClient,
   type VatRecord, type InsertVatRecord,
@@ -13,6 +13,7 @@ import {
   type AttendanceRecord, type InsertAttendance,
   type SalaryProfile, type InsertSalaryProfile,
   type SalarySlip, type InsertSalarySlip,
+  type UkWeeklySchedule, type InsertUkSchedule,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -85,6 +86,11 @@ export interface IStorage {
   createSalarySlip(slip: InsertSalarySlip): Promise<SalarySlip>;
   updateSalarySlip(id: number, slip: Partial<InsertSalarySlip>): Promise<SalarySlip | undefined>;
   deleteSalarySlip(id: number): Promise<void>;
+
+  // UK Weekly Schedules
+  getUkScheduleByClient(clientId: number): Promise<UkWeeklySchedule[]>;
+  saveUkSchedule(clientId: number, items: { taskName: string; days: string }[]): Promise<UkWeeklySchedule[]>;
+  getUkSchedulesForAllClients(): Promise<UkWeeklySchedule[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -374,6 +380,24 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSalarySlip(id: number) {
     await db.delete(salarySlips).where(eq(salarySlips.id, id));
+  }
+
+  // UK Weekly Schedules
+  async getUkScheduleByClient(clientId: number) {
+    return db.select().from(ukWeeklySchedules).where(eq(ukWeeklySchedules.clientId, clientId));
+  }
+
+  async saveUkSchedule(clientId: number, items: { taskName: string; days: string }[]) {
+    await db.delete(ukWeeklySchedules).where(eq(ukWeeklySchedules.clientId, clientId));
+    if (items.length === 0) return [];
+    const inserted = await db.insert(ukWeeklySchedules).values(
+      items.map(i => ({ clientId, taskName: i.taskName, days: i.days }))
+    ).returning();
+    return inserted;
+  }
+
+  async getUkSchedulesForAllClients() {
+    return db.select().from(ukWeeklySchedules);
   }
 }
 

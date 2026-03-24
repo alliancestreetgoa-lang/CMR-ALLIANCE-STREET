@@ -452,6 +452,64 @@ export async function registerRoutes(
     }
   });
 
+  // ===== UK WEEKLY SCHEDULES =====
+
+  app.get("/api/clients/:id/uk-schedule", authenticate, async (req, res) => {
+    try {
+      const clientId = parseInt(req.params.id);
+      const items = await storage.getUkScheduleByClient(clientId);
+      res.json(items);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.put("/api/clients/:id/uk-schedule", authenticate, requireRole("super_admin", "admin"), async (req, res) => {
+    try {
+      const clientId = parseInt(req.params.id);
+      const { items } = req.body as { items: { taskName: string; days: string }[] };
+      if (!Array.isArray(items)) return res.status(400).json({ message: "items must be an array" });
+      const saved = await storage.saveUkSchedule(clientId, items);
+      res.json(saved);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Returns clients with schedule tasks due TODAY (for reminder: called day before)
+  app.get("/api/uk-schedule/reminders", authenticate, async (req, res) => {
+    try {
+      const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      // "day before" reminder: check tasks scheduled for tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowDay = DAYS[tomorrow.getDay()];
+
+      const allSchedules = await storage.getUkSchedulesForAllClients();
+      const allClients = await storage.getClients();
+
+      const reminders: { clientId: number; clientName: string; taskName: string; scheduledDay: string }[] = [];
+
+      for (const sched of allSchedules) {
+        const days = sched.days.split(",").map(d => d.trim()).filter(Boolean);
+        if (days.includes(tomorrowDay)) {
+          const client = allClients.find(c => c.id === sched.clientId);
+          if (client && client.status === "Active") {
+            reminders.push({
+              clientId: sched.clientId,
+              clientName: client.companyName,
+              taskName: sched.taskName,
+              scheduledDay: tomorrowDay,
+            });
+          }
+        }
+      }
+      res.json({ tomorrowDay, reminders });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
   // ===== TASKS =====
 
   app.get("/api/tasks", authenticate, async (req, res) => {
@@ -628,6 +686,24 @@ export async function registerRoutes(
     try {
       const notifs = await storage.getNotificationsByUser(req.user!.userId);
       res.json(notifs);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post("/api/notifications", authenticate, async (req, res) => {
+    try {
+      const { title, message, type } = req.body;
+      if (!title || !message) return res.status(400).json({ message: "title and message required" });
+      const notif = await storage.createNotification({
+        userId: req.user!.userId,
+        title,
+        message,
+        type: type || "info",
+        status: "unread",
+      });
+      notifyUser(req.user!.userId, { type: "new_notification", notification: notif });
+      res.status(201).json(notif);
     } catch (err: any) {
       res.status(500).json({ message: err.message });
     }
