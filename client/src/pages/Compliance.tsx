@@ -369,13 +369,25 @@ export default function Compliance() {
                 </CardContent>
               </Card>
 
-              <Card className={vatOverdue + ctOverdue > 0 ? "border-destructive/40 bg-destructive/5" : ""} data-testid="card-at-risk">
+              <Card
+                className={cn(
+                  "cursor-pointer transition-all hover:shadow-md",
+                  vatOverdue + ctOverdue > 0 ? "border-destructive/40 bg-destructive/5 hover:border-destructive/70" : "hover:border-border"
+                )}
+                data-testid="card-at-risk"
+                onClick={() => {
+                  setViewMode("schedule");
+                  setVatFilter("overdue");
+                  setCtFilter("overdue");
+                }}
+              >
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Overdue / At Risk</p>
                       <p className="text-2xl font-bold mt-1" data-testid="text-at-risk">{vatOverdue + ctOverdue}</p>
                       <p className="text-xs text-destructive font-medium mt-1">{vatOverdue + ctOverdue} overdue</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Click to filter list</p>
                     </div>
                     <div className="h-9 w-9 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
                       <AlertTriangle className="h-5 w-5 text-destructive" />
