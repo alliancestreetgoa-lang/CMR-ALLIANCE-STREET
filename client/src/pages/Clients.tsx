@@ -149,7 +149,9 @@ const emptyForm = {
   corporateTaxEndMonth: "",
   corporateTaxDueDate: "",
   plMonthly: "false",
+  plMonthlyDate: "",
   plQuarterly: "false",
+  plQuarterlyDate: "",
   status: "Active",
   vatQ1Start: "",
   vatQ1End: "",
@@ -342,7 +344,9 @@ export default function Clients() {
         corporateTaxEndMonth: formData.corporateTaxEndMonth || null,
         corporateTaxDueDate: formData.corporateTaxDueDate || null,
         plMonthly: formData.country === "UK" ? formData.plMonthly : "false",
+        plMonthlyDate: formData.country === "UK" && formData.plMonthly === "true" ? formData.plMonthlyDate || null : null,
         plQuarterly: formData.country === "UK" ? formData.plQuarterly : "false",
+        plQuarterlyDate: formData.country === "UK" && formData.plQuarterly === "true" ? formData.plQuarterlyDate || null : null,
         status: "Active",
         vatPeriods: {
           Q1: { start: formData.vatQ1Start || null, end: formData.vatQ1End || null, isActive: formData.vatQ1Active ? "true" : "false" },
@@ -387,7 +391,9 @@ export default function Clients() {
       corporateTaxEndMonth: client.corporateTaxEndMonth || "",
       corporateTaxDueDate: client.corporateTaxDueDate || "",
       plMonthly: client.plMonthly || "false",
+      plMonthlyDate: client.plMonthlyDate || "",
       plQuarterly: client.plQuarterly || "false",
+      plQuarterlyDate: client.plQuarterlyDate || "",
       status: client.status || "Active",
       vatQ1Start: "",
       vatQ1End: "",
@@ -435,7 +441,9 @@ export default function Clients() {
         corporateTaxEndMonth: editFormData.corporateTaxEndMonth || null,
         corporateTaxDueDate: editFormData.corporateTaxDueDate || null,
         plMonthly: editFormData.country === "UK" ? editFormData.plMonthly : "false",
+        plMonthlyDate: editFormData.country === "UK" && editFormData.plMonthly === "true" ? editFormData.plMonthlyDate || null : null,
         plQuarterly: editFormData.country === "UK" ? editFormData.plQuarterly : "false",
+        plQuarterlyDate: editFormData.country === "UK" && editFormData.plQuarterly === "true" ? editFormData.plQuarterlyDate || null : null,
         status: editFormData.status,
       });
 
@@ -611,31 +619,53 @@ export default function Clients() {
                           <Label className="text-sm font-semibold">P&amp;L Reporting</Label>
                           <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">UK only</span>
                         </div>
-                        <div className="flex gap-3">
-                          <button
-                            type="button"
-                            data-testid="toggle-pl-monthly"
-                            onClick={() => setFormData(f => ({ ...f, plMonthly: f.plMonthly === "true" ? "false" : "true" }))}
-                            className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
-                              formData.plMonthly === "true"
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-background text-muted-foreground border-border hover:bg-muted"
-                            }`}
-                          >
-                            P&amp;L Monthly
-                          </button>
-                          <button
-                            type="button"
-                            data-testid="toggle-pl-quarterly"
-                            onClick={() => setFormData(f => ({ ...f, plQuarterly: f.plQuarterly === "true" ? "false" : "true" }))}
-                            className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
-                              formData.plQuarterly === "true"
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-background text-muted-foreground border-border hover:bg-muted"
-                            }`}
-                          >
-                            P&amp;L Quarterly
-                          </button>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <button
+                              type="button"
+                              data-testid="toggle-pl-monthly"
+                              onClick={() => setFormData(f => ({ ...f, plMonthly: f.plMonthly === "true" ? "false" : "true" }))}
+                              className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
+                                formData.plMonthly === "true"
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-background text-muted-foreground border-border hover:bg-muted"
+                              }`}
+                            >
+                              P&amp;L Monthly
+                            </button>
+                            {formData.plMonthly === "true" && (
+                              <Input
+                                type="date"
+                                data-testid="input-pl-monthly-date"
+                                value={formData.plMonthlyDate}
+                                onChange={e => setFormData(f => ({ ...f, plMonthlyDate: e.target.value }))}
+                                className="w-44 h-9 text-sm"
+                              />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <button
+                              type="button"
+                              data-testid="toggle-pl-quarterly"
+                              onClick={() => setFormData(f => ({ ...f, plQuarterly: f.plQuarterly === "true" ? "false" : "true" }))}
+                              className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
+                                formData.plQuarterly === "true"
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-background text-muted-foreground border-border hover:bg-muted"
+                              }`}
+                            >
+                              P&amp;L Quarterly
+                            </button>
+                            {formData.plQuarterly === "true" && (
+                              <Input
+                                type="date"
+                                data-testid="input-pl-quarterly-date"
+                                value={formData.plQuarterlyDate}
+                                onChange={e => setFormData(f => ({ ...f, plQuarterlyDate: e.target.value }))}
+                                className="w-44 h-9 text-sm"
+                              />
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div>
@@ -1030,31 +1060,53 @@ export default function Clients() {
                     <Label className="text-sm font-semibold">P&amp;L Reporting</Label>
                     <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">UK only</span>
                   </div>
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      data-testid="edit-toggle-pl-monthly"
-                      onClick={() => setEditFormData(f => ({ ...f, plMonthly: f.plMonthly === "true" ? "false" : "true" }))}
-                      className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
-                        editFormData.plMonthly === "true"
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-background text-muted-foreground border-border hover:bg-muted"
-                      }`}
-                    >
-                      P&amp;L Monthly
-                    </button>
-                    <button
-                      type="button"
-                      data-testid="edit-toggle-pl-quarterly"
-                      onClick={() => setEditFormData(f => ({ ...f, plQuarterly: f.plQuarterly === "true" ? "false" : "true" }))}
-                      className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
-                        editFormData.plQuarterly === "true"
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-background text-muted-foreground border-border hover:bg-muted"
-                      }`}
-                    >
-                      P&amp;L Quarterly
-                    </button>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <button
+                        type="button"
+                        data-testid="edit-toggle-pl-monthly"
+                        onClick={() => setEditFormData(f => ({ ...f, plMonthly: f.plMonthly === "true" ? "false" : "true" }))}
+                        className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
+                          editFormData.plMonthly === "true"
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background text-muted-foreground border-border hover:bg-muted"
+                        }`}
+                      >
+                        P&amp;L Monthly
+                      </button>
+                      {editFormData.plMonthly === "true" && (
+                        <Input
+                          type="date"
+                          data-testid="edit-input-pl-monthly-date"
+                          value={editFormData.plMonthlyDate}
+                          onChange={e => setEditFormData(f => ({ ...f, plMonthlyDate: e.target.value }))}
+                          className="w-44 h-9 text-sm"
+                        />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <button
+                        type="button"
+                        data-testid="edit-toggle-pl-quarterly"
+                        onClick={() => setEditFormData(f => ({ ...f, plQuarterly: f.plQuarterly === "true" ? "false" : "true" }))}
+                        className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
+                          editFormData.plQuarterly === "true"
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background text-muted-foreground border-border hover:bg-muted"
+                        }`}
+                      >
+                        P&amp;L Quarterly
+                      </button>
+                      {editFormData.plQuarterly === "true" && (
+                        <Input
+                          type="date"
+                          data-testid="edit-input-pl-quarterly-date"
+                          value={editFormData.plQuarterlyDate}
+                          onChange={e => setEditFormData(f => ({ ...f, plQuarterlyDate: e.target.value }))}
+                          className="w-44 h-9 text-sm"
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div>
