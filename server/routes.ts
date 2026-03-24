@@ -93,7 +93,7 @@ async function checkDeadlines(): Promise<number> {
 
   const allTasks = await storage.getTasks();
   for (const task of allTasks) {
-    if (!task.dueDate || task.status === "Completed") continue;
+    if (!task.dueDate || task.status === "Completed" || task.status === "Done") continue;
     const dueDate = new Date(task.dueDate);
     if (dueDate <= threeDaysFromNow && dueDate >= now) {
       const existing = await db.select().from(notifications)
@@ -488,6 +488,10 @@ export async function registerRoutes(
         return res.status(403).json({ message: "You can only update your own tasks" });
       }
 
+      if (req.body.status === "Done" && req.user!.role !== "admin" && req.user!.role !== "super_admin") {
+        return res.status(403).json({ message: "Only admin or super admin can mark tasks as Done" });
+      }
+
       const updated = await storage.updateTask(id, req.body);
 
       if (req.body.status && req.body.status !== existing.status) {
@@ -718,13 +722,14 @@ export async function registerRoutes(
               UAE: allClients.filter(c => c.country === "UAE").length,
             },
         overdueVat: vatRecords.filter(r => r.status === "Overdue").length,
-        activeTasks: tasks.filter(t => t.status !== "Completed").length,
+        activeTasks: tasks.filter(t => t.status !== "Completed" && t.status !== "Done").length,
         urgentTasks: tasks.filter(t => t.priority === "Emergency" || t.priority === "High").length,
         tasksByStatus: {
           "Not Started": tasks.filter(t => t.status === "Not Started").length,
           "In Process": tasks.filter(t => t.status === "In Process").length,
           "Completed": tasks.filter(t => t.status === "Completed").length,
         },
+        doneTasks: tasks.filter(t => t.status === "Done").length,
         totalEmployees: allUsers.filter(u => u.role === "employee").length,
       };
 
@@ -904,7 +909,7 @@ export async function registerRoutes(
         storage.getVatRecords(),
       ]);
 
-      const activeTasks = allTasks.filter(t => t.status !== "Completed");
+      const activeTasks = allTasks.filter(t => t.status !== "Completed" && t.status !== "Done");
 
       if (activeTasks.length === 0) {
         return res.json({ suggestions: [], summary: "No active tasks to prioritize." });

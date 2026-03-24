@@ -3,7 +3,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
-import { Users, AlertTriangle, CheckCircle, Clock, Calendar, ArrowUpRight, Loader2, ListTodo, FileCheck, ClipboardList, TrendingUp, BarChart3, Target } from "lucide-react";
+import { Users, AlertTriangle, CheckCircle, CheckCheck, Clock, Calendar, ArrowUpRight, Loader2, ListTodo, FileCheck, ClipboardList, TrendingUp, BarChart3, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -24,6 +24,7 @@ interface DashboardStats {
   activeTasks: number;
   urgentTasks: number;
   tasksByStatus: { "Not Started": number; "In Process": number; "Completed": number };
+  doneTasks: number;
   totalEmployees: number;
 }
 
@@ -204,7 +205,7 @@ export default function Dashboard() {
   }
 
   const upcomingDeadlineCount = tasks.filter(t => {
-    if (t.status === "Completed" || !t.dueDate) return false;
+    if (t.status === "Completed" || t.status === "Done" || !t.dueDate) return false;
     const days = differenceInDays(new Date(t.dueDate), new Date());
     return days >= 0 && days <= 7;
   }).length;
@@ -225,7 +226,7 @@ export default function Dashboard() {
         <p className="text-muted-foreground">Overview of firm performance and compliance status.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <KPICard
           title="Total Clients"
           value={stats.totalClients}
@@ -255,6 +256,15 @@ export default function Dashboard() {
           value={upcomingDeadlineCount}
           icon={Calendar}
           description="Due in next 7 days"
+          onClick={() => setLocation("/tasks")}
+        />
+        <KPICard
+          title="Done"
+          value={stats.doneTasks}
+          icon={CheckCheck}
+          description="Tasks marked done"
+          iconClassName="bg-green-500/10 border border-green-500/20"
+          iconColor="text-green-500"
           onClick={() => setLocation("/tasks")}
         />
       </div>
@@ -593,7 +603,7 @@ function EmployeeDashboard({
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   const upcomingDeadlines = tasks
-    .filter(t => t.status !== "Completed" && t.dueDate)
+    .filter(t => t.status !== "Completed" && t.status !== "Done" && t.dueDate)
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
   const overdueTasks = upcomingDeadlines.filter(t => isPast(new Date(t.dueDate)));
@@ -835,7 +845,7 @@ function EmployeeDashboard({
                   .slice(0, 8)
                   .map((task) => {
                     const daysUntilDue = differenceInDays(new Date(task.dueDate), new Date());
-                    const isOverdue = isPast(new Date(task.dueDate)) && task.status !== "Completed";
+                    const isOverdue = isPast(new Date(task.dueDate)) && task.status !== "Completed" && task.status !== "Done";
                     return (
                       <div key={task.id} className={cn(
                         "flex items-center justify-between p-3 rounded-lg border transition-colors bg-card cursor-pointer",

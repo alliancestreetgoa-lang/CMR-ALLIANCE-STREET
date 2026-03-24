@@ -7,7 +7,7 @@ export const roleEnum = pgEnum("role", ["super_admin", "admin", "employee"]);
 export const vatStatusEnum = pgEnum("vat_status", ["Not Started", "In Progress", "Filed", "Completed", "Overdue"]);
 export const vatQuarterEnum = pgEnum("vat_quarter", ["Q1", "Q2", "Q3", "Q4"]);
 export const taskPriorityEnum = pgEnum("task_priority", ["Normal", "High", "Emergency"]);
-export const taskStatusEnum = pgEnum("task_status", ["Not Started", "In Process", "Completed", "Review"]);
+export const taskStatusEnum = pgEnum("task_status", ["Not Started", "In Process", "Completed", "Review", "Done"]);
 export const actionTypeEnum = pgEnum("action_type", ["CREATE", "UPDATE", "DELETE", "LOGIN", "EXPORT"]);
 export const notificationStatusEnum = pgEnum("notification_status", ["unread", "read", "dismissed"]);
 

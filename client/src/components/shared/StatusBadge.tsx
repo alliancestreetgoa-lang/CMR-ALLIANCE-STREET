@@ -14,7 +14,7 @@ export function StatusBadge({ status, className, variant }: StatusBadgeProps) {
 
   if (variant) {
     computedVariant = variant;
-  } else if (["active", "completed", "filed", "paid"].includes(lowerStatus)) {
+  } else if (["active", "completed", "filed", "paid", "done"].includes(lowerStatus)) {
     computedVariant = "success";
   } else if (["warning", "in progress", "pending", "review"].includes(lowerStatus)) {
     computedVariant = "warning";

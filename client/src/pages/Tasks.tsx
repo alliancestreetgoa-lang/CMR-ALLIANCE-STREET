@@ -37,7 +37,7 @@ type TaskData = {
   title: string;
   description: string | null;
   priority: "Normal" | "High" | "Emergency";
-  status: "Not Started" | "In Process" | "Completed" | "Review";
+  status: "Not Started" | "In Process" | "Completed" | "Review" | "Done";
   dueDate: string | null;
   assignmentDate: string | null;
   comments: string | null;
@@ -232,6 +232,7 @@ export default function Tasks() {
     "In Process": tasks.filter((t) => t.status === "In Process"),
     "Completed": tasks.filter((t) => t.status === "Completed"),
     ...(isAdmin ? { "Review": tasks.filter((t) => t.status === "Review") } : {}),
+    ...(isAdmin ? { "Done": tasks.filter((t) => t.status === "Done") } : {}),
   };
 
   const allUsers = Object.entries(usersMap).map(([id, name]) => ({
@@ -568,6 +569,7 @@ export default function Tasks() {
                               <SelectItem value="In Process">In Process</SelectItem>
                               <SelectItem value="Completed">Completed</SelectItem>
                               {isAdmin && <SelectItem value="Review">Review</SelectItem>}
+                              {isAdmin && <SelectItem value="Done">Done</SelectItem>}
                             </SelectContent>
                           </Select>
                         </div>
@@ -726,6 +728,7 @@ export default function Tasks() {
                               <SelectItem value="In Process">In Process</SelectItem>
                               <SelectItem value="Completed">Completed</SelectItem>
                               {isAdmin && <SelectItem value="Review">Review</SelectItem>}
+                              {isAdmin && <SelectItem value="Done">Done</SelectItem>}
                             </SelectContent>
                           </Select>
                         </td>
