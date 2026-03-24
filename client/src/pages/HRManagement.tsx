@@ -1910,40 +1910,117 @@ function SalarySlipPrintView({
     <div className="salary-slip-print" data-testid="salary-slip-print">
       <style>{`
         @media print {
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          body * { visibility: hidden; }
-          .salary-slip-print, .salary-slip-print * { visibility: visible; }
-          .salary-slip-print {
-            position: fixed; left: 0; top: 0; width: 100%; padding: 24px;
-            background: #ffffff !important; color: #111111 !important;
-            font-size: 11px;
+          *, *::before, *::after {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
-          .salary-slip-print .print-bg-override { background: #ffffff !important; }
-          .salary-slip-print h2, .salary-slip-print h3 { color: #111111 !important; }
-          .salary-slip-print [class*="muted"] { color: #666666 !important; }
-          .salary-slip-print [class*="bg-muted"] { background-color: #f3f4f6 !important; }
-          .salary-slip-print [class*="bg-primary"] { background-color: #fff0f0 !important; }
+
+          :root {
+            --background: 0 0% 100% !important;
+            --foreground: 0 0% 7% !important;
+            --card: 0 0% 100% !important;
+            --card-foreground: 0 0% 7% !important;
+            --popover: 0 0% 100% !important;
+            --popover-foreground: 0 0% 7% !important;
+            --primary: 0 72% 51% !important;
+            --primary-foreground: 0 0% 100% !important;
+            --muted: 210 20% 96% !important;
+            --muted-foreground: 215 16% 40% !important;
+            --border: 214 20% 85% !important;
+          }
+
+          html, body {
+            background: #ffffff !important;
+            color: #111111 !important;
+          }
+
+          body * {
+            visibility: hidden;
+          }
+
+          .salary-slip-print,
+          .salary-slip-print * {
+            visibility: visible !important;
+          }
+
+          .salary-slip-print {
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            padding: 20px !important;
+            margin: 0 !important;
+            background: #ffffff !important;
+            color: #111111 !important;
+            font-size: 11px !important;
+            z-index: 999999 !important;
+          }
+
+          .salary-slip-print div,
+          .salary-slip-print span,
+          .salary-slip-print p,
+          .salary-slip-print h1,
+          .salary-slip-print h2,
+          .salary-slip-print h3,
+          .salary-slip-print h4,
+          .salary-slip-print h5,
+          .salary-slip-print h6,
+          .salary-slip-print label,
+          .salary-slip-print strong,
+          .salary-slip-print b {
+            color: #111111 !important;
+            background-color: transparent !important;
+          }
+
+          .salary-slip-print > div {
+            background: #ffffff !important;
+            border-color: #d1d5db !important;
+          }
+
+          .salary-slip-print td,
+          .salary-slip-print th {
+            color: #111111 !important;
+            border-color: #e5e7eb !important;
+            background-color: transparent !important;
+          }
+
+          .salary-slip-print [class*="text-muted"] { color: #555555 !important; }
           .salary-slip-print [class*="text-primary"] { color: #dc2626 !important; }
-          .salary-slip-print [class*="border"] { border-color: #e5e7eb !important; }
-          .salary-slip-print td, .salary-slip-print th { color: #111111 !important; border-color: #e5e7eb !important; }
-          .salary-slip-print .bg-green-100 { background-color: #d1fae5 !important; }
-          .salary-slip-print .bg-red-100 { background-color: #fee2e2 !important; }
-          .salary-slip-print .bg-yellow-100 { background-color: #fef9c3 !important; }
-          .salary-slip-print .bg-orange-100 { background-color: #ffedd5 !important; }
-          .salary-slip-print .bg-slate-100 { background-color: #f1f5f9 !important; }
-          .salary-slip-print .bg-purple-100 { background-color: #f3e8ff !important; }
-          .salary-slip-print .text-green-800 { color: #166534 !important; }
-          .salary-slip-print .text-red-800 { color: #991b1b !important; }
-          .salary-slip-print .text-yellow-800 { color: #854d0e !important; }
-          .salary-slip-print .text-orange-800 { color: #9a3412 !important; }
-          .salary-slip-print .text-slate-800 { color: #1e293b !important; }
-          .salary-slip-print .text-purple-800 { color: #6b21a8 !important; }
-          .salary-slip-print .dark\:bg-green-900\/30 { background-color: #d1fae5 !important; }
-          .salary-slip-print .dark\:bg-red-900\/30 { background-color: #fee2e2 !important; }
-          .salary-slip-print .dark\:text-green-400 { color: #166534 !important; }
-          .salary-slip-print .dark\:text-red-400 { color: #991b1b !important; }
-          .salary-slip-print .rounded-lg { border-radius: 6px !important; }
-          button, [data-testid="button-print-slip"], [data-testid="button-download-slip-pdf"] { display: none !important; }
+          .salary-slip-print [class*="bg-muted"] { background-color: #f3f4f6 !important; }
+
+          .salary-slip-print .bg-green-100,
+          .salary-slip-print [class*="bg-green-900"],
+          .salary-slip-print [class*="bg-green"] { background-color: #d1fae5 !important; }
+          .salary-slip-print .bg-red-100,
+          .salary-slip-print [class*="bg-red-900"],
+          .salary-slip-print [class*="bg-red"] { background-color: #fee2e2 !important; }
+          .salary-slip-print .bg-yellow-100,
+          .salary-slip-print [class*="bg-yellow"] { background-color: #fef9c3 !important; }
+          .salary-slip-print .bg-orange-100,
+          .salary-slip-print [class*="bg-orange"] { background-color: #ffedd5 !important; }
+          .salary-slip-print .bg-slate-100,
+          .salary-slip-print [class*="bg-slate"] { background-color: #f1f5f9 !important; }
+          .salary-slip-print .bg-purple-100,
+          .salary-slip-print [class*="bg-purple"] { background-color: #f3e8ff !important; }
+          .salary-slip-print .bg-gray-50,
+          .salary-slip-print [class*="bg-gray"] { background-color: #f9fafb !important; }
+
+          .salary-slip-print [class*="text-green"] { color: #166534 !important; }
+          .salary-slip-print [class*="text-red"] { color: #991b1b !important; }
+          .salary-slip-print [class*="text-yellow"] { color: #854d0e !important; }
+          .salary-slip-print [class*="text-orange"] { color: #9a3412 !important; }
+          .salary-slip-print [class*="text-slate"] { color: #1e293b !important; }
+          .salary-slip-print [class*="text-purple"] { color: #6b21a8 !important; }
+          .salary-slip-print [class*="text-gray"] { color: #6b7280 !important; }
+
+          .salary-slip-print [class*="border-red"],
+          .salary-slip-print [class*="border-destructive"] { border-color: #dc2626 !important; }
+
+          button,
+          [data-testid="button-print-slip"],
+          [data-testid="button-download-slip-pdf"],
+          [role="dialog"] > [class*="absolute"] { display: none !important; }
         }
       `}</style>
 
