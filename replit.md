@@ -27,8 +27,8 @@ Preferred communication style: Simple, everyday language.
 - **UI Components**: shadcn/ui (new-york style) built on Radix UI primitives
 - **Styling**: Tailwind CSS v4 with CSS variables for theming
 - **Charts**: Recharts for dashboard visualizations
-- **Fonts**: Playfair Display (headings) + Inter (body text)
-- **Theme**: Dark theme with near-black background (#121212), Alliance Street red (#E53E3E) as primary accent, clean white text. CSS utility classes: `.brand-gradient`, `.brand-shimmer`, `.kpi-glass-3d`, `.sidebar-link-animated`
+- **Fonts**: Inter (headings + body text), Playfair Display loaded but reserved for salary slip print
+- **Theme**: Light & Airy - off-white background (#FAFAFA), sage green primary (#6B9080), clean dark text. Light gray sidebar (#F0F2F5). Complementary chart palette: sage (#6B9080), olive (#A3B18A), warm (#D4A574), terracotta (#C97C6B), neutral (#D1D5DB). CSS utility classes: `.sidebar-link-animated`, `.hover-elevate`, `.active-elevate-2`
 
 Key pages: Login, Dashboard, Clients, Compliance (VAT tracking), Tasks, Users
 

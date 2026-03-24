@@ -754,17 +754,17 @@ export async function registerRoutes(
       const vatRecords = isEmployee ? allVat.filter(v => v.assignedTo === userId) : allVat;
 
       const priorityBreakdown = [
-        { name: "Emergency", value: tasks.filter(t => t.priority === "Emergency").length, fill: "#ef4444" },
-        { name: "High", value: tasks.filter(t => t.priority === "High").length, fill: "#f97316" },
-        { name: "Normal", value: tasks.filter(t => t.priority === "Normal").length, fill: "#3b82f6" },
-        { name: "Low", value: tasks.filter(t => t.priority === "Low").length, fill: "#22c55e" },
+        { name: "Emergency", value: tasks.filter(t => t.priority === "Emergency").length, fill: "#C97C6B" },
+        { name: "High", value: tasks.filter(t => t.priority === "High").length, fill: "#D4A574" },
+        { name: "Normal", value: tasks.filter(t => t.priority === "Normal").length, fill: "#6B9080" },
+        { name: "Low", value: tasks.filter(t => t.priority === "Low").length, fill: "#A3B18A" },
       ];
 
       const vatStatusBreakdown = [
-        { name: "Filed", value: vatRecords.filter(r => r.status === "Filed").length, fill: "#22c55e" },
-        { name: "Pending", value: vatRecords.filter(r => r.status === "Pending").length, fill: "#f59e0b" },
-        { name: "Overdue", value: vatRecords.filter(r => r.status === "Overdue").length, fill: "#ef4444" },
-        { name: "Not Due", value: vatRecords.filter(r => r.status === "Not Due" || r.status === "Upcoming").length, fill: "#94a3b8" },
+        { name: "Filed", value: vatRecords.filter(r => r.status === "Filed").length, fill: "#6B9080" },
+        { name: "Pending", value: vatRecords.filter(r => r.status === "Pending").length, fill: "#D4A574" },
+        { name: "Overdue", value: vatRecords.filter(r => r.status === "Overdue").length, fill: "#C97C6B" },
+        { name: "Not Due", value: vatRecords.filter(r => r.status === "Not Due" || r.status === "Upcoming").length, fill: "#D1D5DB" },
       ];
 
       const now = new Date();
@@ -803,9 +803,9 @@ export async function registerRoutes(
       }
 
       const statusTrend = [
-        { name: "Not Started", value: tasks.filter(t => t.status === "Not Started").length, fill: "#94a3b8" },
-        { name: "In Process", value: tasks.filter(t => t.status === "In Process").length, fill: "#3b82f6" },
-        { name: "Completed", value: tasks.filter(t => t.status === "Completed").length, fill: "#22c55e" },
+        { name: "Not Started", value: tasks.filter(t => t.status === "Not Started").length, fill: "#D1D5DB" },
+        { name: "In Process", value: tasks.filter(t => t.status === "In Process").length, fill: "#A3B18A" },
+        { name: "Completed", value: tasks.filter(t => t.status === "Completed").length, fill: "#6B9080" },
       ];
 
       res.json({

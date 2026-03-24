@@ -327,12 +327,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
           <SidebarHeader className="h-16 flex items-center px-4 border-b border-sidebar-border">
              <div className="flex items-center gap-2.5 font-heading font-bold text-base">
-                <div className="size-8 rounded-md brand-shimmer flex items-center justify-center text-[10px] font-bold tracking-widest shrink-0" style={{ color: '#FFFFFF' }}>
-                  AS
+                <div className="size-8 rounded-md bg-primary flex items-center justify-center text-[10px] font-bold tracking-widest shrink-0 text-primary-foreground">
+                  A
                 </div>
                 <div className="flex flex-col group-data-[collapsible=icon]:hidden leading-tight">
-                  <span className="text-sm font-semibold" style={{ color: '#FFFFFF', fontFamily: "'Playfair Display', serif" }}>Alliance Street</span>
-                  <span className="text-[10px] text-sidebar-foreground/50 font-sans tracking-widest uppercase">Accounting</span>
+                  <span className="text-sm font-semibold text-foreground">Alliance Street</span>
+                  <span className="text-[10px] text-muted-foreground font-sans tracking-widest uppercase">Accounting</span>
                 </div>
              </div>
           </SidebarHeader>
@@ -376,8 +376,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-auto p-0 hover:bg-transparent w-full flex items-center gap-3 justify-start">
-                    <Avatar className="size-8 border border-primary/30 shrink-0" style={{ boxShadow: '0 0 10px rgba(229,62,62,0.2)' }}>
-                      <AvatarFallback className="text-xs font-semibold brand-gradient" style={{ color: '#FFFFFF' }}>{initials}</AvatarFallback>
+                    <Avatar className="size-8 border border-primary/30 shrink-0">
+                      <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">{initials}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col items-start overflow-hidden group-data-[collapsible=icon]:hidden text-left">
                       <span className="truncate text-sm font-medium text-sidebar-foreground">{user?.name}</span>
@@ -406,7 +406,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </Sidebar>
         
         <div className="flex-1 flex flex-col min-h-screen min-w-0 transition-all duration-300 ease-in-out">
-          <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-4 border-b border-border/60 px-6 backdrop-blur-xl" style={{ background: 'rgba(7,11,20,0.85)', boxShadow: '0 1px 0 rgba(212,175,55,0.06), 0 4px 24px rgba(0,0,0,0.3)' }}>
+          <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-4 border-b border-border/60 px-6 backdrop-blur-xl bg-background/90">
             <SidebarTrigger className="-ml-2 text-muted-foreground hover:text-primary transition-colors" />
             <div className="h-4 w-px bg-border/40" />
             

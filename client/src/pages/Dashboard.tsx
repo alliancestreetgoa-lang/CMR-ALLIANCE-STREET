@@ -211,8 +211,8 @@ export default function Dashboard() {
   }).length;
 
   const clientsByCountry = [
-    { name: 'UK', value: stats.clientsByCountry.UK || 0, color: '#6366f1' },
-    { name: 'UAE', value: stats.clientsByCountry.UAE || 0, color: '#06b6d4' },
+    { name: 'UK', value: stats.clientsByCountry.UK || 0, color: '#6B9080' },
+    { name: 'UAE', value: stats.clientsByCountry.UAE || 0, color: '#A3B18A' },
   ];
 
   const urgentTasksList = tasks
@@ -325,12 +325,12 @@ export default function Dashboard() {
                 <AreaChart data={chartData?.deadlineTimeline || []} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gradDue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#D4A574" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#D4A574" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="gradCompleted" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#6B9080" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#6B9080" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
@@ -338,8 +338,8 @@ export default function Dashboard() {
                   <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                   <RechartsTooltip content={<CustomTooltip />} />
                   <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
-                  <Area type="monotone" dataKey="due" name="Pending" stroke="#f97316" fill="url(#gradDue)" strokeWidth={2} dot={{ r: 4, fill: "#f97316", strokeWidth: 0 }} activeDot={{ r: 6, stroke: "#f97316", strokeWidth: 2, fill: "white" }} animationDuration={1500} />
-                  <Area type="monotone" dataKey="completed" name="Completed" stroke="#22c55e" fill="url(#gradCompleted)" strokeWidth={2} dot={{ r: 4, fill: "#22c55e", strokeWidth: 0 }} activeDot={{ r: 6, stroke: "#22c55e", strokeWidth: 2, fill: "white" }} animationDuration={1500} animationBegin={300} />
+                  <Area type="monotone" dataKey="due" name="Pending" stroke="#D4A574" fill="url(#gradDue)" strokeWidth={2} dot={{ r: 4, fill: "#D4A574", strokeWidth: 0 }} activeDot={{ r: 6, stroke: "#D4A574", strokeWidth: 2, fill: "white" }} animationDuration={1500} />
+                  <Area type="monotone" dataKey="completed" name="Completed" stroke="#6B9080" fill="url(#gradCompleted)" strokeWidth={2} dot={{ r: 4, fill: "#6B9080", strokeWidth: 0 }} activeDot={{ r: 6, stroke: "#6B9080", strokeWidth: 2, fill: "white" }} animationDuration={1500} animationBegin={300} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -377,9 +377,9 @@ export default function Dashboard() {
                     <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
                     <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="notStarted" name="Not Started" stackId="a" fill="#94a3b8" radius={[0, 0, 0, 0]} animationDuration={1000} />
-                    <Bar dataKey="inProcess" name="In Process" stackId="a" fill="#3b82f6" radius={[0, 0, 0, 0]} animationDuration={1000} animationBegin={200} />
-                    <Bar dataKey="completed" name="Completed" stackId="a" fill="#22c55e" radius={[0, 4, 4, 0]} animationDuration={1000} animationBegin={400} />
+                    <Bar dataKey="notStarted" name="Not Started" stackId="a" fill="#D1D5DB" radius={[0, 0, 0, 0]} animationDuration={1000} />
+                    <Bar dataKey="inProcess" name="In Process" stackId="a" fill="#A3B18A" radius={[0, 0, 0, 0]} animationDuration={1000} animationBegin={200} />
+                    <Bar dataKey="completed" name="Completed" stackId="a" fill="#6B9080" radius={[0, 4, 4, 0]} animationDuration={1000} animationBegin={400} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -615,7 +615,7 @@ function EmployeeDashboard({
   const unreadNotifications = notifications.filter(n => n.status === "unread");
 
   const radialData = [
-    { name: "Progress", value: completionRate, fill: completionRate >= 75 ? "#22c55e" : completionRate >= 50 ? "#3b82f6" : completionRate >= 25 ? "#f59e0b" : "#ef4444" },
+    { name: "Progress", value: completionRate, fill: completionRate >= 75 ? "#6B9080" : completionRate >= 50 ? "#A3B18A" : completionRate >= 25 ? "#D4A574" : "#C97C6B" },
   ];
 
   const priorityData = (chartData?.priorityBreakdown || []).filter(d => d.value > 0);
