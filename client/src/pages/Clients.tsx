@@ -38,7 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { MoreHorizontal, Plus, Download, Search, Loader2, Trash2 } from "lucide-react";
+import { MoreHorizontal, Plus, Download, Search, Loader2, Trash2, Building2, CircleCheck, CircleMinus, Globe } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -229,6 +229,26 @@ export default function Clients() {
   }, []);
 
   const canManageClients = user?.role === "super_admin" || user?.role === "admin";
+
+  // Summary stats (computed from all loaded clients, before table filter)
+  const visibleClients = clients.filter(c =>
+    allowedCountrySet.length === 0 || allowedCountrySet.includes(c.country as "UK" | "UAE")
+  );
+  const statsAll = {
+    total: visibleClients.length,
+    active: visibleClients.filter(c => c.status === "Active").length,
+    inactive: visibleClients.filter(c => c.status === "Inactive").length,
+  };
+  const statsUK = {
+    total: visibleClients.filter(c => c.country === "UK").length,
+    active: visibleClients.filter(c => c.country === "UK" && c.status === "Active").length,
+    inactive: visibleClients.filter(c => c.country === "UK" && c.status === "Inactive").length,
+  };
+  const statsUAE = {
+    total: visibleClients.filter(c => c.country === "UAE").length,
+    active: visibleClients.filter(c => c.country === "UAE" && c.status === "Active").length,
+    inactive: visibleClients.filter(c => c.country === "UAE" && c.status === "Inactive").length,
+  };
 
   const filteredClients = clients.filter(client => {
     const matchesSearch = client.companyName.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -474,6 +494,21 @@ export default function Clients() {
     }
   };
 
+  // Helper: stat card definition
+  type IconComponent = (props: { className?: string }) => JSX.Element;
+  type StatCard = { label: string; icon: IconComponent; stats: typeof statsAll; country: "ALL" | "UK" | "UAE"; colorClass: string };
+  const statCards: StatCard[] = [
+    ...(showCountryFilter || allowedCountrySet.length === 0
+      ? [{ label: "All Clients", icon: Globe, stats: statsAll, country: "ALL" as const, colorClass: "text-primary" }]
+      : []),
+    ...(allowedCountrySet.includes("UK")
+      ? [{ label: "UK Clients", icon: Building2, stats: statsUK, country: "UK" as const, colorClass: "text-blue-600 dark:text-blue-400" }]
+      : []),
+    ...(allowedCountrySet.includes("UAE")
+      ? [{ label: "UAE Clients", icon: Building2, stats: statsUAE, country: "UAE" as const, colorClass: "text-amber-600 dark:text-amber-400" }]
+      : []),
+  ];
+
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6 min-w-0 w-full">
@@ -582,6 +617,56 @@ export default function Clients() {
             </Dialog>
           )}
         </div>
+
+        {/* Summary stat cards */}
+        {!loading && (
+          <div className={cn(
+            "grid gap-4",
+            statCards.length === 3 ? "grid-cols-1 sm:grid-cols-3" :
+            statCards.length === 2 ? "grid-cols-1 sm:grid-cols-2" :
+            "grid-cols-1 sm:grid-cols-2"
+          )}>
+            {statCards.map((card) => {
+              const isActive = countryFilter === card.country;
+              return (
+                <Card
+                  key={card.country}
+                  data-testid={`stat-card-${card.country.toLowerCase()}`}
+                  onClick={() => {
+                    setCountryFilter(card.country);
+                    setStatusFilter("ALL");
+                  }}
+                  className={cn(
+                    "cursor-pointer border transition-colors hover-elevate",
+                    isActive ? "border-primary bg-primary/5" : "border-border/60"
+                  )}
+                >
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-medium text-muted-foreground">{card.label}</span>
+                      <card.icon className={cn("w-4 h-4", card.colorClass)} />
+                    </div>
+                    <div className="text-3xl font-bold text-foreground mb-3">{card.stats.total}</div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1.5">
+                        <CircleCheck className="w-3.5 h-3.5 text-green-500" />
+                        <span className="text-sm text-muted-foreground">
+                          <span className="font-semibold text-foreground">{card.stats.active}</span> Active
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <CircleMinus className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
+                          <span className="font-semibold text-foreground">{card.stats.inactive}</span> Inactive
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
 
         <Card className="border-border/60 shadow-sm overflow-hidden min-w-0">
           <CardHeader className="pb-4 bg-muted/10 border-b border-border/40">
