@@ -1894,6 +1894,18 @@ function SalarySlipPrintView({
     }
   };
 
+  const statusStyle = (status: string): React.CSSProperties => {
+    switch (status) {
+      case "Present": return { backgroundColor: "#d1fae5", color: "#166534" };
+      case "Absent": return { backgroundColor: "#fee2e2", color: "#991b1b" };
+      case "Half Day": return { backgroundColor: "#fef9c3", color: "#854d0e" };
+      case "Leave": return { backgroundColor: "#ffedd5", color: "#9a3412" };
+      case "Week Off": return { backgroundColor: "#f1f5f9", color: "#1e293b" };
+      case "Holiday": return { backgroundColor: "#f3e8ff", color: "#6b21a8" };
+      default: return { backgroundColor: "#f9fafb", color: "#9ca3af" };
+    }
+  };
+
   const statusBg = (status: string) => {
     switch (status) {
       case "Present": return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
@@ -1906,59 +1918,46 @@ function SalarySlipPrintView({
     }
   };
 
-  return (
-    <div className="salary-slip-print" data-testid="salary-slip-print">
-      {/* Print styles are in index.css under @media print */}
+  const P: React.CSSProperties = {
+    fontFamily: "'Inter', Arial, sans-serif",
+    color: "#111111",
+    backgroundColor: "#ffffff",
+  };
+  const muted: React.CSSProperties = { color: "#666666" };
+  const tblHead: React.CSSProperties = { backgroundColor: "#f3f4f6", color: "#111111", padding: "8px 12px", borderBottom: "1px solid #e5e7eb", fontSize: "13px", fontWeight: 600 };
+  const tblCell: React.CSSProperties = { color: "#111111", padding: "8px 12px", borderBottom: "1px solid #e5e7eb", fontSize: "12px" };
+  const tblCellRight: React.CSSProperties = { ...tblCell, textAlign: "right" };
+  const tblRowAlt: React.CSSProperties = { backgroundColor: "#f9fafb" };
 
-      <div className="border rounded-lg p-6 space-y-6">
-        <div className="text-center border-b pb-4">
-          <h2 className="text-xl font-bold font-heading">Alliance Street Accounting Private Limited</h2>
-          <p className="text-sm text-muted-foreground mt-1">Salary Slip</p>
-          <p className="text-sm font-medium mt-1">
+  return (
+    <div className="salary-slip-print" data-testid="salary-slip-print" style={P}>
+      <div style={{ border: "1px solid #d1d5db", borderRadius: "6px", padding: "24px", backgroundColor: "#ffffff" }}>
+        <div style={{ textAlign: "center", borderBottom: "1px solid #e5e7eb", paddingBottom: "16px", marginBottom: "20px" }}>
+          <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#111111", margin: 0, fontFamily: "'Playfair Display', Georgia, serif" }}>Alliance Street Accounting Private Limited</h2>
+          <p style={{ fontSize: "13px", ...muted, margin: "4px 0 0" }}>Salary Slip</p>
+          <p style={{ fontSize: "13px", fontWeight: 500, color: "#111111", margin: "4px 0 0" }}>
             {getMonthName(slip.month)} {slip.year}
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="text-muted-foreground">Employee Name:</span>
-            <span className="ml-2 font-medium">{employeeName}</span>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Currency:</span>
-            <span className="ml-2 font-medium">{slip.currency}</span>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Working Days:</span>
-            <span className="ml-2 font-medium">{slip.workingDays || "—"}</span>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Present Days (Paid):</span>
-            <span className="ml-2 font-medium">{slip.presentDays || "—"}</span>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Absent Days:</span>
-            <span className="ml-2 font-medium">{slip.absentDays || "—"}</span>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Status:</span>
-            <span className="ml-2">
-              <Badge variant={slip.status === "Final" ? "default" : "secondary"}>{slip.status}</Badge>
-            </span>
-          </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", fontSize: "13px", marginBottom: "20px" }}>
+          <div><span style={muted}>Employee Name:</span> <span style={{ fontWeight: 500, color: "#111111" }}>{employeeName}</span></div>
+          <div><span style={muted}>Currency:</span> <span style={{ fontWeight: 500, color: "#111111" }}>{slip.currency}</span></div>
+          <div><span style={muted}>Working Days:</span> <span style={{ fontWeight: 500, color: "#111111" }}>{slip.workingDays || "—"}</span></div>
+          <div><span style={muted}>Present Days (Paid):</span> <span style={{ fontWeight: 500, color: "#111111" }}>{slip.presentDays || "—"}</span></div>
+          <div><span style={muted}>Absent Days:</span> <span style={{ fontWeight: 500, color: "#111111" }}>{slip.absentDays || "—"}</span></div>
+          <div><span style={muted}>Status:</span> <span style={{ fontWeight: 500, color: "#111111", marginLeft: "8px" }}>{slip.status}</span></div>
         </div>
 
-        <div className="border rounded-lg overflow-hidden">
-          <div className="bg-muted/50 px-4 py-2 border-b">
-            <h3 className="text-sm font-semibold">Daily Attendance — {getMonthName(slip.month)} {slip.year}</h3>
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: "6px", overflow: "hidden", marginBottom: "20px" }}>
+          <div style={{ backgroundColor: "#f3f4f6", padding: "8px 16px", borderBottom: "1px solid #e5e7eb" }}>
+            <h3 style={{ fontSize: "13px", fontWeight: 600, color: "#111111", margin: 0 }}>Daily Attendance — {getMonthName(slip.month)} {slip.year}</h3>
           </div>
           {loadingAttendance ? (
-            <div className="flex items-center justify-center py-6">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
+            <div style={{ textAlign: "center", padding: "24px", color: "#666" }}>Loading...</div>
           ) : (
-            <div className="p-3">
-              <div className="grid grid-cols-7 gap-1 text-xs">
+            <div style={{ padding: "12px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px", fontSize: "11px" }}>
                 {Array.from({ length: daysInMonth }, (_, i) => {
                   const day = i + 1;
                   const record = attendanceMap[day];
@@ -1966,108 +1965,88 @@ function SalarySlipPrintView({
                   const dayName = format(d, "EEE");
                   const status = record ? record.status : "—";
                   const short = record ? statusShort(record.status) : "—";
+                  const cellStyle = record ? statusStyle(record.status) : { backgroundColor: "#f9fafb", color: "#9ca3af", borderStyle: "dashed" as const };
                   return (
                     <div
                       key={day}
-                      className={cn(
-                        "rounded p-1.5 text-center border",
-                        record ? statusBg(record.status) : "bg-gray-50 dark:bg-gray-900/20 border-dashed"
-                      )}
+                      style={{
+                        ...cellStyle,
+                        borderRadius: "4px",
+                        padding: "6px",
+                        textAlign: "center",
+                        border: `1px ${record ? "solid" : "dashed"} #d1d5db`,
+                        WebkitPrintColorAdjust: "exact",
+                        printColorAdjust: "exact",
+                      } as React.CSSProperties}
                       title={`${format(d, "dd MMM")} — ${status}`}
                     >
-                      <div className="font-semibold leading-tight">{day}</div>
-                      <div className="text-[10px] opacity-70">{dayName}</div>
-                      <div className="font-bold mt-0.5 leading-tight">{short}</div>
+                      <div style={{ fontWeight: 600, lineHeight: 1.2 }}>{day}</div>
+                      <div style={{ fontSize: "10px", opacity: 0.7 }}>{dayName}</div>
+                      <div style={{ fontWeight: 700, marginTop: "2px", lineHeight: 1.2 }}>{short}</div>
                     </div>
                   );
                 })}
               </div>
-              <div className="flex flex-wrap gap-3 mt-3 pt-2 border-t text-[10px]">
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-100 dark:bg-green-900/30 border"></span> P = Present</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-100 dark:bg-red-900/30 border"></span> A = Absent</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-yellow-100 dark:bg-yellow-900/30 border"></span> HD = Half Day</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-orange-100 dark:bg-orange-900/30 border"></span> L = Leave</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-slate-100 dark:bg-slate-900/30 border"></span> WO = Week Off</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-purple-100 dark:bg-purple-900/30 border"></span> H = Holiday</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-50 dark:bg-gray-900/20 border border-dashed"></span> — = Not Marked</span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginTop: "12px", paddingTop: "8px", borderTop: "1px solid #e5e7eb", fontSize: "10px", color: "#555" }}>
+                {[
+                  { label: "P = Present", bg: "#d1fae5" },
+                  { label: "A = Absent", bg: "#fee2e2" },
+                  { label: "HD = Half Day", bg: "#fef9c3" },
+                  { label: "L = Leave", bg: "#ffedd5" },
+                  { label: "WO = Week Off", bg: "#f1f5f9" },
+                  { label: "H = Holiday", bg: "#f3e8ff" },
+                  { label: "— = Not Marked", bg: "#f9fafb" },
+                ].map((item) => (
+                  <span key={item.label} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span style={{ width: "12px", height: "12px", borderRadius: "3px", backgroundColor: item.bg, border: "1px solid #d1d5db", WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" } as React.CSSProperties}></span>
+                    {item.label}
+                  </span>
+                ))}
               </div>
             </div>
           )}
         </div>
 
-        <div className="border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead>Earnings</TableHead>
-                <TableHead className="text-right">Amount ({slip.currency})</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell>Basic Salary</TableCell>
-                <TableCell className="text-right">{basicSalary.toFixed(2)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Housing Allowance</TableCell>
-                <TableCell className="text-right">{housing.toFixed(2)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Transport Allowance</TableCell>
-                <TableCell className="text-right">{transport.toFixed(2)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Other Allowances</TableCell>
-                <TableCell className="text-right">{other.toFixed(2)}</TableCell>
-              </TableRow>
-              <TableRow className="font-semibold bg-muted/30">
-                <TableCell>Gross Salary</TableCell>
-                <TableCell className="text-right">{gross.toFixed(2)}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: "6px", overflow: "hidden", marginBottom: "20px" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr><th style={{ ...tblHead, textAlign: "left" }}>Earnings</th><th style={{ ...tblHead, textAlign: "right" }}>Amount ({slip.currency})</th></tr>
+            </thead>
+            <tbody>
+              <tr><td style={tblCell}>Basic Salary</td><td style={tblCellRight}>{basicSalary.toFixed(2)}</td></tr>
+              <tr style={tblRowAlt}><td style={tblCell}>Housing Allowance</td><td style={tblCellRight}>{housing.toFixed(2)}</td></tr>
+              <tr><td style={tblCell}>Transport Allowance</td><td style={tblCellRight}>{transport.toFixed(2)}</td></tr>
+              <tr style={tblRowAlt}><td style={tblCell}>Other Allowances</td><td style={tblCellRight}>{other.toFixed(2)}</td></tr>
+              <tr style={{ backgroundColor: "#f3f4f6" }}><td style={{ ...tblCell, fontWeight: 600 }}>Gross Salary</td><td style={{ ...tblCellRight, fontWeight: 600 }}>{gross.toFixed(2)}</td></tr>
+            </tbody>
+          </table>
         </div>
 
-        <div className="border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead>Deductions</TableHead>
-                <TableHead className="text-right">Amount ({slip.currency})</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell>Deductions</TableCell>
-                <TableCell className="text-right">{deductions.toFixed(2)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>PF (Provident Fund)</TableCell>
-                <TableCell className="text-right">{pfAmount.toFixed(2)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>TDS (Tax Deducted at Source)</TableCell>
-                <TableCell className="text-right">{tdsAmount.toFixed(2)}</TableCell>
-              </TableRow>
-              <TableRow className="font-semibold bg-muted/30">
-                <TableCell>Total Deductions</TableCell>
-                <TableCell className="text-right">{(deductions + pfAmount + tdsAmount).toFixed(2)}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: "6px", overflow: "hidden", marginBottom: "20px" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr><th style={{ ...tblHead, textAlign: "left" }}>Deductions</th><th style={{ ...tblHead, textAlign: "right" }}>Amount ({slip.currency})</th></tr>
+            </thead>
+            <tbody>
+              <tr><td style={tblCell}>Deductions</td><td style={tblCellRight}>{deductions.toFixed(2)}</td></tr>
+              <tr style={tblRowAlt}><td style={tblCell}>PF (Provident Fund)</td><td style={tblCellRight}>{pfAmount.toFixed(2)}</td></tr>
+              <tr><td style={tblCell}>TDS (Tax Deducted at Source)</td><td style={tblCellRight}>{tdsAmount.toFixed(2)}</td></tr>
+              <tr style={{ backgroundColor: "#f3f4f6" }}><td style={{ ...tblCell, fontWeight: 600 }}>Total Deductions</td><td style={{ ...tblCellRight, fontWeight: 600 }}>{(deductions + pfAmount + tdsAmount).toFixed(2)}</td></tr>
+            </tbody>
+          </table>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg border border-primary/20">
-          <span className="text-lg font-bold">Net Salary</span>
-          <span className="text-lg font-bold text-primary">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px", backgroundColor: "#fef2f2", borderRadius: "6px", border: "2px solid #dc2626" }}>
+          <span style={{ fontSize: "16px", fontWeight: 700, color: "#111111" }}>Net Salary</span>
+          <span style={{ fontSize: "16px", fontWeight: 700, color: "#dc2626" }}>
             {slip.currency} {net.toFixed(2)}
           </span>
         </div>
 
-        <div className="text-center text-xs text-muted-foreground pt-4 border-t">
-          <p>This is a computer-generated document and does not require a signature.</p>
+        <div style={{ textAlign: "center", fontSize: "11px", color: "#888888", paddingTop: "16px", marginTop: "16px", borderTop: "1px solid #e5e7eb" }}>
+          <p style={{ margin: 0 }}>This is a computer-generated document and does not require a signature.</p>
           {slip.generatedAt && (
-            <p className="mt-1">
+            <p style={{ margin: "4px 0 0" }}>
               Generated on: {format(new Date(slip.generatedAt), "MMMM d, yyyy 'at' h:mm a")}
             </p>
           )}
