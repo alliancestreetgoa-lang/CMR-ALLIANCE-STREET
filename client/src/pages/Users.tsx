@@ -30,9 +30,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Shield, ShieldAlert, User as UserIcon, Loader2, Pencil } from "lucide-react";
+import { Plus, Search, Shield, ShieldAlert, User as UserIcon, Loader2, Pencil, Globe } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 type UserData = {
@@ -40,8 +41,72 @@ type UserData = {
   name: string;
   email: string;
   role: "super_admin" | "admin" | "employee";
+  allowedCountries: string | null;
   createdAt: string;
 };
+
+const COUNTRIES = ["UK", "UAE"] as const;
+
+function parseCountries(val: string | null): string[] {
+  if (!val) return [];
+  return val.split(",").map((c) => c.trim()).filter(Boolean);
+}
+
+function formatCountries(selected: string[]): string | null {
+  if (selected.length === 0) return null;
+  return selected.join(",");
+}
+
+function CountryBadges({ value }: { value: string | null }) {
+  if (!value) return <span className="text-xs text-muted-foreground">All countries</span>;
+  const countries = parseCountries(value);
+  return (
+    <div className="flex gap-1 flex-wrap">
+      {countries.map((c) => (
+        <Badge key={c} variant="outline" className="text-[10px] px-1.5 py-0 font-mono">
+          {c}
+        </Badge>
+      ))}
+    </div>
+  );
+}
+
+function CountryCheckboxes({
+  selected,
+  onChange,
+  disabled,
+}: {
+  selected: string[];
+  onChange: (val: string[]) => void;
+  disabled?: boolean;
+}) {
+  const toggle = (country: string) => {
+    if (selected.includes(country)) {
+      onChange(selected.filter((c) => c !== country));
+    } else {
+      onChange([...selected, country]);
+    }
+  };
+
+  return (
+    <div className="flex gap-4">
+      {COUNTRIES.map((c) => (
+        <div key={c} className="flex items-center gap-2">
+          <Checkbox
+            id={`country-${c}`}
+            checked={selected.includes(c)}
+            onCheckedChange={() => toggle(c)}
+            disabled={disabled}
+            data-testid={`checkbox-country-${c.toLowerCase()}`}
+          />
+          <Label htmlFor={`country-${c}`} className="font-normal cursor-pointer">
+            {c}
+          </Label>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function UsersPage() {
   const { user: currentUser } = useAuth();
@@ -55,12 +120,14 @@ export default function UsersPage() {
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState<"admin" | "employee">("employee");
   const [newPassword, setNewPassword] = useState("");
+  const [newCountries, setNewCountries] = useState<string[]>([]);
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
   const [editName, setEditName] = useState("");
   const [editRole, setEditRole] = useState<"admin" | "employee">("employee");
   const [editPassword, setEditPassword] = useState("");
+  const [editCountries, setEditCountries] = useState<string[]>([]);
 
   const fetchUsers = async () => {
     try {
@@ -91,6 +158,7 @@ export default function UsersPage() {
         name: newName,
         password: newPassword,
         role: newRole,
+        allowedCountries: formatCountries(newCountries),
       });
       
       toast({ title: "Success", description: "User created successfully" });
@@ -98,6 +166,7 @@ export default function UsersPage() {
       setNewName("");
       setNewRole("employee");
       setNewPassword("");
+      setNewCountries([]);
       setIsDialogOpen(false);
       
       await fetchUsers();
@@ -123,6 +192,7 @@ export default function UsersPage() {
     setEditName(user.name);
     setEditRole(user.role === "super_admin" ? "admin" : user.role);
     setEditPassword("");
+    setEditCountries(parseCountries(user.allowedCountries));
     setIsEditDialogOpen(true);
   };
 
@@ -131,7 +201,11 @@ export default function UsersPage() {
 
     setSubmitting(true);
     try {
-      const payload: any = { name: editName, role: editRole };
+      const payload: any = {
+        name: editName,
+        role: editRole,
+        allowedCountries: formatCountries(editCountries),
+      };
       if (editPassword) payload.password = editPassword;
 
       await api.patch(`/api/users/${editingUser.id}`, payload);
@@ -158,6 +232,7 @@ export default function UsersPage() {
   };
 
   const canAdd = currentUser?.role === "super_admin" || currentUser?.role === "admin";
+  const isSuperAdmin = currentUser?.role === "super_admin";
 
   if (loading) {
     return (
@@ -175,7 +250,7 @@ export default function UsersPage() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-heading font-bold tracking-tight text-foreground">User Management</h1>
-            <p className="text-muted-foreground">Manage system access and roles.</p>
+            <p className="text-muted-foreground">Manage system access, roles, and country permissions.</p>
           </div>
           
           {canAdd && (
@@ -185,11 +260,11 @@ export default function UsersPage() {
                   <Plus className="mr-2 h-4 w-4" /> Add New User
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-[460px]">
                 <DialogHeader>
                   <DialogTitle>Create New User</DialogTitle>
                   <DialogDescription>
-                    Add a new user to the system with a username and password.
+                    Add a new user and set which countries they can access.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -214,6 +289,19 @@ export default function UsersPage() {
                         <SelectItem value="employee">Employee</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-start gap-4">
+                    <Label className="text-right pt-2">
+                      <span className="flex items-center gap-1 justify-end">
+                        <Globe className="w-3 h-3" /> Countries
+                      </span>
+                    </Label>
+                    <div className="col-span-3 space-y-1">
+                      <CountryCheckboxes selected={newCountries} onChange={setNewCountries} />
+                      <p className="text-[11px] text-muted-foreground">
+                        Leave unchecked to grant access to all countries.
+                      </p>
+                    </div>
                   </div>
                 </div>
                 <DialogFooter>
@@ -248,6 +336,7 @@ export default function UsersPage() {
                     <TableHead className="w-[80px]">Avatar</TableHead>
                     <TableHead>Username</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>Country Access</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -261,6 +350,13 @@ export default function UsersPage() {
                       </TableCell>
                       <TableCell className="font-medium" data-testid={`text-username-${user.id}`}>{user.name}</TableCell>
                       <TableCell>{getRoleBadge(user.role)}</TableCell>
+                      <TableCell data-testid={`text-countries-${user.id}`}>
+                        {user.role === "super_admin" ? (
+                          <span className="text-xs text-muted-foreground italic">Unrestricted</span>
+                        ) : (
+                          <CountryBadges value={user.allowedCountries} />
+                        )}
+                      </TableCell>
                       <TableCell className="text-right space-x-1">
                         {currentUser?.id !== user.id && canManageUsers(currentUser?.role, user.role) && (
                           <>
@@ -295,11 +391,11 @@ export default function UsersPage() {
       </div>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[460px]">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
             <DialogDescription>
-              Update user details. Leave password blank to keep the current one.
+              Update user details, role, and country access permissions.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -324,6 +420,19 @@ export default function UsersPage() {
                   <SelectItem value="employee">Employee</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label className="text-right pt-2">
+                <span className="flex items-center gap-1 justify-end">
+                  <Globe className="w-3 h-3" /> Countries
+                </span>
+              </Label>
+              <div className="col-span-3 space-y-1">
+                <CountryCheckboxes selected={editCountries} onChange={setEditCountries} />
+                <p className="text-[11px] text-muted-foreground">
+                  Leave unchecked to grant access to all countries.
+                </p>
+              </div>
             </div>
           </div>
           <DialogFooter>

@@ -240,7 +240,7 @@ export async function registerRoutes(
 
   app.post("/api/users", authenticate, requireRole("super_admin", "admin"), async (req, res) => {
     try {
-      const { name, password, role } = req.body;
+      const { name, password, role, allowedCountries } = req.body;
       
       if (!name || !password) {
         return res.status(400).json({ message: "Username and password are required" });
@@ -259,7 +259,13 @@ export async function registerRoutes(
 
       const email = `${name.toLowerCase().replace(/\s+/g, '.')}@alliancestreet.ae`;
       const hashedPassword = await bcrypt.hash(password, 10);
-      const user = await storage.createUser({ name, email, password: hashedPassword, role });
+      const user = await storage.createUser({
+        name,
+        email,
+        password: hashedPassword,
+        role,
+        allowedCountries: allowedCountries || null,
+      });
 
       await storage.createAuditLog({
         userId: req.user!.userId,
@@ -277,7 +283,7 @@ export async function registerRoutes(
   app.patch("/api/users/:id", authenticate, requireRole("super_admin", "admin"), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const { name, email, role, password } = req.body;
+      const { name, email, role, password, allowedCountries } = req.body;
 
       if (req.user!.role === "admin" && role && role !== "employee") {
         return res.status(403).json({ message: "Admins can only assign the employee role" });
@@ -289,6 +295,10 @@ export async function registerRoutes(
       if (role) updateData.role = role;
       if (password) {
         updateData.password = await bcrypt.hash(password, 10);
+      }
+      // allowedCountries can be set to null (to clear) or a string value
+      if ("allowedCountries" in req.body) {
+        updateData.allowedCountries = allowedCountries || null;
       }
 
       const [updated] = await db.update(users).set(updateData).where(eq(users.id, id)).returning();
@@ -322,7 +332,19 @@ export async function registerRoutes(
   app.get("/api/clients", authenticate, async (req, res) => {
     try {
       const allClients = await storage.getClients();
-      res.json(allClients);
+      // Super admins always see all clients
+      if (req.user!.role === "super_admin") {
+        return res.json(allClients);
+      }
+      // For admin/employee, filter by their allowedCountries
+      const currentUser = await storage.getUser(req.user!.userId);
+      if (!currentUser || !currentUser.allowedCountries) {
+        // No country restriction set — return all for backward compat
+        return res.json(allClients);
+      }
+      const allowed = currentUser.allowedCountries.split(",").map((c) => c.trim());
+      const filtered = allClients.filter((c) => allowed.includes(c.country));
+      res.json(filtered);
     } catch (err: any) {
       res.status(500).json({ message: err.message });
     }

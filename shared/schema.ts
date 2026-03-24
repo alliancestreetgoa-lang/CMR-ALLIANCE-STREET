@@ -18,6 +18,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   role: roleEnum("role").notNull().default("employee"),
+  allowedCountries: text("allowed_countries"), // comma-separated: "UK", "UAE", "UK,UAE", or null = all
   notificationPreferences: text("notification_preferences"),
   createdAt: timestamp("created_at").defaultNow(),
 });
