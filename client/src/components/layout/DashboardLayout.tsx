@@ -247,7 +247,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [notifications, loginPopupShown, unreadCount]);
 
-  // UK schedule: day-before reminder check (runs once per calendar day per session)
+  // UK schedule + date-based reminders: runs once per calendar day per session
   useEffect(() => {
     if (!user) return;
     const todayKey = `uk_reminder_checked_${new Date().toISOString().slice(0, 10)}`;
@@ -255,22 +255,42 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     sessionStorage.setItem(todayKey, "1");
     (async () => {
       try {
+        // Weekly schedule reminders
         const data = await api.get("/api/uk-schedule/reminders");
-        if (!data.reminders || data.reminders.length === 0) return;
-        // Group by client
-        const byClient: Record<number, { clientName: string; tasks: string[] }> = {};
-        for (const r of data.reminders) {
-          if (!byClient[r.clientId]) byClient[r.clientId] = { clientName: r.clientName, tasks: [] };
-          byClient[r.clientId].tasks.push(r.taskName);
+        if (data.reminders && data.reminders.length > 0) {
+          const byClient: Record<number, { clientName: string; tasks: string[] }> = {};
+          for (const r of data.reminders) {
+            if (!byClient[r.clientId]) byClient[r.clientId] = { clientName: r.clientName, tasks: [] };
+            byClient[r.clientId].tasks.push(r.taskName);
+          }
+          for (const [, info] of Object.entries(byClient)) {
+            await api.post("/api/notifications", {
+              userId: user.id,
+              title: `Reminder: ${info.clientName}`,
+              message: `Tomorrow (${data.tomorrowDay}): ${info.tasks.join(", ")}`,
+              type: "reminder",
+            });
+          }
         }
-        for (const [, info] of Object.entries(byClient)) {
-          await api.post("/api/notifications", {
-            userId: user.id,
-            title: `Reminder: ${info.clientName}`,
-            message: `Tomorrow (${data.tomorrowDay}): ${info.tasks.join(", ")}`,
-            type: "reminder",
-          });
+
+        // Date-based reminders (VAT Quarterly drafts, P&L Monthly/Quarterly)
+        const dateData = await api.get("/api/date-reminders");
+        if (dateData.reminders && dateData.reminders.length > 0) {
+          const byClient: Record<number, { clientName: string; labels: string[] }> = {};
+          for (const r of dateData.reminders) {
+            if (!byClient[r.clientId]) byClient[r.clientId] = { clientName: r.clientName, labels: [] };
+            byClient[r.clientId].labels.push(r.label);
+          }
+          for (const [, info] of Object.entries(byClient)) {
+            await api.post("/api/notifications", {
+              userId: user.id,
+              title: `Reminder: ${info.clientName}`,
+              message: `Due tomorrow (${dateData.tomorrowLabel}): ${info.labels.join(", ")}`,
+              type: "reminder",
+            });
+          }
         }
+
         fetchNotifications();
       } catch {}
     })();

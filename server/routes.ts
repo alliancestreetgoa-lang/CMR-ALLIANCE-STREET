@@ -510,6 +510,42 @@ export async function registerRoutes(
     }
   });
 
+  // Monthly date-based reminders (VAT Quarterly drafts, P&L Monthly/Quarterly)
+  app.get("/api/date-reminders", authenticate, async (req, res) => {
+    try {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowDayOfMonth = tomorrow.getDate();
+      const tomorrowLabel = `${tomorrow.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}`;
+
+      const allClients = await storage.getClients();
+      const ukActiveClients = allClients.filter(c => c.country === "UK" && c.status === "Active");
+
+      const reminders: { clientId: number; clientName: string; label: string }[] = [];
+
+      for (const client of ukActiveClients) {
+        const checks: { flag: string | null; date: string | null; label: string }[] = [
+          { flag: client.plMonthly, date: client.plMonthlyDate, label: "P&L Monthly" },
+          { flag: client.plQuarterly, date: client.plQuarterlyDate, label: "P&L Quarterly" },
+          { flag: client.vatQuarterlyUk, date: client.vatQuarterlyDraft1Date, label: "VAT Draft 1" },
+          { flag: client.vatQuarterlyUk, date: client.vatQuarterlyDraft2Date, label: "VAT Draft 2" },
+          { flag: client.vatQuarterlyUk, date: client.vatQuarterlySubmitDate, label: "VAT Submit" },
+        ];
+        for (const { flag, date, label } of checks) {
+          if (flag !== "true" || !date) continue;
+          const d = new Date(date);
+          if (!isNaN(d.getTime()) && d.getDate() === tomorrowDayOfMonth) {
+            reminders.push({ clientId: client.id, clientName: client.companyName, label });
+          }
+        }
+      }
+
+      res.json({ tomorrowLabel, reminders });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
   // ===== TASKS =====
 
   app.get("/api/tasks", authenticate, async (req, res) => {
