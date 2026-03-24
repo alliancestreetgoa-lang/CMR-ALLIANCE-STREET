@@ -342,7 +342,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { title: "Notifications", icon: Bell, path: "/notifications" },
   ];
 
-  if (user?.role === "super_admin" || user?.role === "admin") {
+  if (user?.role === "super_admin") {
     menuItems.push({ title: "User Management", icon: ShieldCheck, path: "/users" });
   }
 
