@@ -45,6 +45,7 @@ function LoginRoute() {
       </div>
     );
   }
+  if (user) return <Redirect to="/" />;
   return (
     <div className="page-enter">
       <Login />
@@ -55,8 +56,8 @@ function LoginRoute() {
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={LoginRoute} />
       <Route path="/login" component={LoginRoute} />
+      <Route path="/">{() => <ProtectedRoute component={Dashboard} />}</Route>
       <Route path="/clients">{() => <ProtectedRoute component={Clients} />}</Route>
       <Route path="/compliance">{() => <ProtectedRoute component={Compliance} />}</Route>
       <Route path="/tasks">{() => <ProtectedRoute component={Tasks} />}</Route>
