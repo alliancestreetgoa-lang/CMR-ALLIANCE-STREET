@@ -63,41 +63,41 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   LUXURY DARK THEME — Alliance Street CRM
-   Palette: Deep Charcoal · Champagne Gold · Navy · Slate
+   DARK THEME — Alliance Street CRM
+   Palette: Near-Black · Red Accent · Clean White Text
 ───────────────────────────────────────────────────────────────────────────── */
 :root {
   --radius: 0.5rem;
 
   /* Backgrounds */
-  --background: 222 47% 5%;           /* #070B14  — near-black navy */
-  --foreground: 210 30% 94%;          /* #EDF1F7  — soft white      */
+  --background: 0 0% 7%;              /* #121212  — near-black      */
+  --foreground: 0 0% 95%;             /* #F2F2F2  — clean white     */
 
-  /* Cards — glass-like surface */
-  --card: 222 40% 8%;                 /* #0D1220  — dark glass      */
-  --card-foreground: 210 30% 94%;
+  /* Cards — slightly elevated dark surface */
+  --card: 0 0% 10%;                   /* #1A1A1A                    */
+  --card-foreground: 0 0% 95%;
 
   /* Popovers / Dropdowns */
-  --popover: 222 40% 8%;
-  --popover-foreground: 210 30% 94%;
+  --popover: 0 0% 10%;
+  --popover-foreground: 0 0% 95%;
 
-  /* Primary — Champagne Gold */
-  --primary: 46 65% 52%;              /* #D4AF37  — gold            */
-  --primary-foreground: 222 47% 5%;   /* dark on gold               */
+  /* Primary — Alliance Street Red */
+  --primary: 0 72% 51%;               /* #E53E3E  — brand red       */
+  --primary-foreground: 0 0% 100%;    /* white on red               */
 
-  /* Secondary — deep muted navy */
-  --secondary: 222 35% 13%;           /* #181F2D                    */
-  --secondary-foreground: 210 30% 94%;
+  /* Secondary — dark muted surface */
+  --secondary: 0 0% 14%;              /* #242424                    */
+  --secondary-foreground: 0 0% 95%;
 
   /* Muted */
-  --muted: 222 35% 11%;
-  --muted-foreground: 215 18% 55%;    /* #7C8BA0                    */
+  --muted: 0 0% 12%;
+  --muted-foreground: 0 0% 55%;       /* #8C8C8C                    */
 
   /* Accent — slight tint for hover/focus areas */
-  --accent: 222 35% 14%;
-  --accent-foreground: 210 30% 94%;
+  --accent: 0 0% 15%;
+  --accent-foreground: 0 0% 95%;
 
-  /* Destructive — keep red for errors */
+  /* Destructive — same red for errors */
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
 
@@ -108,65 +108,65 @@
   --warning-foreground: 0 0% 100%;
 
   /* Structure */
-  --border: 222 30% 14%;              /* subtle navy border         */
-  --input: 222 35% 12%;
-  --ring: 46 65% 52%;                 /* gold focus ring            */
+  --border: 0 0% 16%;                 /* subtle neutral border      */
+  --input: 0 0% 13%;
+  --ring: 0 72% 51%;                  /* red focus ring             */
 
-  /* Charts — elegant palette */
-  --chart-1: 46 65% 52%;             /* gold                       */
+  /* Charts */
+  --chart-1: 0 72% 51%;              /* red                        */
   --chart-2: 213 67% 52%;            /* steel blue                 */
   --chart-3: 158 64% 40%;            /* emerald                    */
   --chart-4: 38 88% 50%;             /* amber                      */
-  --chart-5: 215 18% 55%;            /* slate gray                 */
+  --chart-5: 0 0% 55%;               /* gray                       */
 
-  /* Sidebar — deepest navy surface */
-  --sidebar: 222 47% 4%;             /* #070A12                    */
-  --sidebar-foreground: 215 18% 62%; /* cool muted text            */
-  --sidebar-primary: 46 65% 52%;     /* gold active                */
-  --sidebar-primary-foreground: 222 47% 5%;
-  --sidebar-accent: 222 40% 9%;      /* hover surface              */
-  --sidebar-accent-foreground: 210 30% 94%;
-  --sidebar-border: 222 40% 10%;     /* very subtle border         */
-  --sidebar-ring: 46 65% 52%;
+  /* Sidebar — deepest surface */
+  --sidebar: 0 0% 5%;                /* #0D0D0D                    */
+  --sidebar-foreground: 0 0% 60%;    /* muted text                 */
+  --sidebar-primary: 0 72% 51%;      /* red active                 */
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 0 0% 11%;        /* hover surface              */
+  --sidebar-accent-foreground: 0 0% 95%;
+  --sidebar-border: 0 0% 12%;        /* very subtle border         */
+  --sidebar-ring: 0 72% 51%;
 }
 
 .dark {
-  --background: 222 47% 5%;
-  --foreground: 210 30% 94%;
-  --card: 222 40% 8%;
-  --card-foreground: 210 30% 94%;
-  --popover: 222 40% 8%;
-  --popover-foreground: 210 30% 94%;
-  --primary: 46 65% 52%;
-  --primary-foreground: 222 47% 5%;
-  --secondary: 222 35% 13%;
-  --secondary-foreground: 210 30% 94%;
-  --muted: 222 35% 11%;
-  --muted-foreground: 215 18% 55%;
-  --accent: 222 35% 14%;
-  --accent-foreground: 210 30% 94%;
+  --background: 0 0% 7%;
+  --foreground: 0 0% 95%;
+  --card: 0 0% 10%;
+  --card-foreground: 0 0% 95%;
+  --popover: 0 0% 10%;
+  --popover-foreground: 0 0% 95%;
+  --primary: 0 72% 51%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 14%;
+  --secondary-foreground: 0 0% 95%;
+  --muted: 0 0% 12%;
+  --muted-foreground: 0 0% 55%;
+  --accent: 0 0% 15%;
+  --accent-foreground: 0 0% 95%;
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
   --success: 158 64% 40%;
   --success-foreground: 0 0% 100%;
   --warning: 38 88% 50%;
   --warning-foreground: 0 0% 100%;
-  --border: 222 30% 14%;
-  --input: 222 35% 12%;
-  --ring: 46 65% 52%;
-  --chart-1: 46 65% 52%;
+  --border: 0 0% 16%;
+  --input: 0 0% 13%;
+  --ring: 0 72% 51%;
+  --chart-1: 0 72% 51%;
   --chart-2: 213 67% 52%;
   --chart-3: 158 64% 40%;
   --chart-4: 38 88% 50%;
-  --chart-5: 215 18% 55%;
-  --sidebar: 222 47% 4%;
-  --sidebar-foreground: 215 18% 62%;
-  --sidebar-primary: 46 65% 52%;
-  --sidebar-primary-foreground: 222 47% 5%;
-  --sidebar-accent: 222 40% 9%;
-  --sidebar-accent-foreground: 210 30% 94%;
-  --sidebar-border: 222 40% 10%;
-  --sidebar-ring: 46 65% 52%;
+  --chart-5: 0 0% 55%;
+  --sidebar: 0 0% 5%;
+  --sidebar-foreground: 0 0% 60%;
+  --sidebar-primary: 0 72% 51%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 0 0% 11%;
+  --sidebar-accent-foreground: 0 0% 95%;
+  --sidebar-border: 0 0% 12%;
+  --sidebar-ring: 0 72% 51%;
 }
 
 @layer base {
@@ -230,15 +230,15 @@
 
 .kpi-glass-3d:hover {
   transform: translateY(-4px) perspective(1000px) rotateX(1.5deg);
-  border-color: rgba(212, 175, 55, 0.2);
-  border-bottom-color: rgba(212, 175, 55, 0.08);
+  border-color: rgba(229, 62, 62, 0.2);
+  border-bottom-color: rgba(229, 62, 62, 0.08);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.12) inset,
     -1px 0 0 rgba(255, 255, 255, 0.06) inset,
     0 12px 40px rgba(0, 0, 0, 0.5),
     0 4px 12px rgba(0, 0, 0, 0.3),
     0 24px 48px -12px rgba(0, 0, 0, 0.35),
-    0 0 40px -8px rgba(212, 175, 55, 0.08);
+    0 0 40px -8px rgba(229, 62, 62, 0.08);
 }
 
 .kpi-glass-3d:active {
@@ -247,39 +247,36 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   GOLD GRADIENT UTILITY
+   BRAND RED GRADIENT UTILITY
 ───────────────────────────────────────────────────────────────────────────── */
-.gold-gradient {
+.brand-gradient {
   background: linear-gradient(
     135deg,
-    #C9A227 0%,
-    #E5C97B 35%,
-    #D4AF37 55%,
-    #B8921A 80%,
-    #D4AF37 100%
+    #C53030 0%,
+    #E53E3E 50%,
+    #FC5656 100%
   );
-  background-size: 200% 200%;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   GOLD SHIMMER ANIMATION (for buttons & active elements)
+   BRAND SHIMMER ANIMATION (for logo & active elements)
 ───────────────────────────────────────────────────────────────────────────── */
-@keyframes goldShimmer {
+@keyframes brandShimmer {
   0%   { background-position: 200% center; }
   100% { background-position: -200% center; }
 }
 
-.gold-shimmer {
+.brand-shimmer {
   background: linear-gradient(
     105deg,
-    #C9A227 0%,
-    #E5C97B 30%,
-    #F0D97A 50%,
-    #D4AF37 70%,
-    #B8921A 100%
+    #C53030 0%,
+    #E53E3E 30%,
+    #FC5656 50%,
+    #E53E3E 70%,
+    #C53030 100%
   );
   background-size: 300% auto;
-  animation: goldShimmer 4s linear infinite;
+  animation: brandShimmer 4s linear infinite;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -324,7 +321,7 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   SIDEBAR — GOLD ACTIVE INDICATOR
+   SIDEBAR — RED ACTIVE INDICATOR
 ───────────────────────────────────────────────────────────────────────────── */
 .sidebar-link-animated {
   position: relative;
@@ -340,8 +337,8 @@
   width: 2.5px;
   height: 55%;
   border-radius: 0 3px 3px 0;
-  background: linear-gradient(180deg, #E5C97B, #D4AF37, #B8921A);
-  box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+  background: linear-gradient(180deg, #FC5656, #E53E3E, #C53030);
+  box-shadow: 0 0 8px rgba(229, 62, 62, 0.6);
   transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -349,9 +346,8 @@
   transform: translateY(-50%) scaleY(1);
 }
 
-/* Gold glow on active sidebar item text */
 .sidebar-link-animated[data-active="true"] {
-  color: hsl(46 65% 52%) !important;
+  color: hsl(0 0% 100%) !important;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -398,8 +394,8 @@
 /* toggle system */
 .toggle-elevate {}
 .toggle-elevate.toggle-elevated {
-  background: rgba(212, 175, 55, 0.12);
-  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.25);
+  background: rgba(229, 62, 62, 0.12);
+  box-shadow: 0 0 0 1px rgba(229, 62, 62, 0.25);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -413,11 +409,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.18);
+  background: rgba(229, 62, 62, 0.18);
   border-radius: 100px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.35);
+  background: rgba(229, 62, 62, 0.35);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -428,18 +424,18 @@
   border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 .luxury-table tr:hover {
-  background: rgba(212, 175, 55, 0.04);
+  background: rgba(229, 62, 62, 0.04);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   KPI CARD GOLD ACCENT TOP BORDER
+   KPI CARD RED ACCENT TOP BORDER
 ───────────────────────────────────────────────────────────────────────────── */
-.kpi-gold-top::before {
+.kpi-red-top::before {
   content: '';
   display: block;
   height: 2px;
   width: 100%;
-  background: linear-gradient(90deg, #D4AF37 0%, transparent 100%);
+  background: linear-gradient(90deg, #E53E3E 0%, transparent 100%);
   border-radius: 2px 2px 0 0;
   margin-bottom: -2px;
 }
@@ -447,11 +443,11 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    SOFT GLOW UTILITY
 ───────────────────────────────────────────────────────────────────────────── */
-.gold-glow {
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.15), 0 0 40px rgba(212, 175, 55, 0.06);
+.brand-glow {
+  box-shadow: 0 0 20px rgba(229, 62, 62, 0.15), 0 0 40px rgba(229, 62, 62, 0.06);
 }
-.gold-text-glow {
-  text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+.brand-text-glow {
+  text-shadow: 0 0 20px rgba(229, 62, 62, 0.5);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────

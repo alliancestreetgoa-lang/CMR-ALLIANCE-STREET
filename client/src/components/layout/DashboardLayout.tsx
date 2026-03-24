@@ -327,11 +327,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
           <SidebarHeader className="h-16 flex items-center px-4 border-b border-sidebar-border">
              <div className="flex items-center gap-2.5 font-heading font-bold text-base">
-                <div className="size-8 rounded-md gold-shimmer flex items-center justify-center text-[10px] font-bold tracking-widest shrink-0" style={{ color: '#0B0F19' }}>
+                <div className="size-8 rounded-md brand-shimmer flex items-center justify-center text-[10px] font-bold tracking-widest shrink-0" style={{ color: '#FFFFFF' }}>
                   AS
                 </div>
                 <div className="flex flex-col group-data-[collapsible=icon]:hidden leading-tight">
-                  <span className="text-sm font-semibold" style={{ color: '#D4AF37', fontFamily: "'Playfair Display', serif" }}>Alliance Street</span>
+                  <span className="text-sm font-semibold" style={{ color: '#FFFFFF', fontFamily: "'Playfair Display', serif" }}>Alliance Street</span>
                   <span className="text-[10px] text-sidebar-foreground/50 font-sans tracking-widest uppercase">Accounting</span>
                 </div>
              </div>
@@ -376,8 +376,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-auto p-0 hover:bg-transparent w-full flex items-center gap-3 justify-start">
-                    <Avatar className="size-8 border border-primary/30 shrink-0" style={{ boxShadow: '0 0 10px rgba(212,175,55,0.2)' }}>
-                      <AvatarFallback className="text-xs font-semibold gold-gradient" style={{ color: '#0B0F19' }}>{initials}</AvatarFallback>
+                    <Avatar className="size-8 border border-primary/30 shrink-0" style={{ boxShadow: '0 0 10px rgba(229,62,62,0.2)' }}>
+                      <AvatarFallback className="text-xs font-semibold brand-gradient" style={{ color: '#FFFFFF' }}>{initials}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col items-start overflow-hidden group-data-[collapsible=icon]:hidden text-left">
                       <span className="truncate text-sm font-medium text-sidebar-foreground">{user?.name}</span>

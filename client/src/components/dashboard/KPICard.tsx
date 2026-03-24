@@ -53,10 +53,9 @@ export function KPICard({
         style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.05) 60%, transparent 100%)" }}
       />
 
-      {/* Gold accent glow at top-left corner */}
       <div
         className="absolute top-0 left-0 w-24 h-24 pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity duration-500"
-        style={{ background: "radial-gradient(circle at 0% 0%, rgba(212,175,55,0.12) 0%, transparent 70%)" }}
+        style={{ background: "radial-gradient(circle at 0% 0%, rgba(229,62,62,0.10) 0%, transparent 70%)" }}
       />
 
       {/* Inner glass highlight — diagonal reflection */}
@@ -90,7 +89,7 @@ export function KPICard({
               iconClassName ?? "border border-primary/20"
             )}
             style={{
-              background: iconClassName ? undefined : "linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.04) 100%)",
+              background: iconClassName ? undefined : "linear-gradient(135deg, rgba(229,62,62,0.12) 0%, rgba(229,62,62,0.04) 100%)",
               boxShadow: "0 2px 8px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.04) inset",
             }}
           >
@@ -112,10 +111,9 @@ export function KPICard({
         )}
       </div>
 
-      {/* Hover gold glow at bottom-right */}
       <div
         className="absolute bottom-0 right-0 w-28 h-28 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 65%)" }}
+        style={{ background: "radial-gradient(circle, rgba(229,62,62,0.08) 0%, transparent 65%)" }}
       />
     </div>
   );

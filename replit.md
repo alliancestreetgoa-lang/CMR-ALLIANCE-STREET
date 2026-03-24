@@ -27,7 +27,8 @@ Preferred communication style: Simple, everyday language.
 - **UI Components**: shadcn/ui (new-york style) built on Radix UI primitives
 - **Styling**: Tailwind CSS v4 with CSS variables for theming
 - **Charts**: Recharts for dashboard visualizations
-- **Fonts**: Outfit (headers) + Inter (body text)
+- **Fonts**: Playfair Display (headings) + Inter (body text)
+- **Theme**: Dark theme with near-black background (#121212), Alliance Street red (#E53E3E) as primary accent, clean white text. CSS utility classes: `.brand-gradient`, `.brand-shimmer`, `.kpi-glass-3d`, `.sidebar-link-animated`
 
 Key pages: Login, Dashboard, Clients, Compliance (VAT tracking), Tasks, Users
 
