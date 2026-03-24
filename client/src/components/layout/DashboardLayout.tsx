@@ -323,14 +323,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-secondary/30">
-        <Sidebar collapsible="icon" className="border-r border-border/50 bg-sidebar text-sidebar-foreground">
-          <SidebarHeader className="h-16 flex items-center px-4 border-b border-sidebar-border/50">
-             <div className="flex items-center gap-2 font-heading font-bold text-lg text-sidebar-primary-foreground">
-                <div className="size-8 rounded bg-primary flex items-center justify-center text-white">
+      <div className="flex min-h-screen w-full bg-background">
+        <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+          <SidebarHeader className="h-16 flex items-center px-4 border-b border-sidebar-border">
+             <div className="flex items-center gap-2.5 font-heading font-bold text-base">
+                <div className="size-8 rounded-md gold-shimmer flex items-center justify-center text-[10px] font-bold tracking-widest shrink-0" style={{ color: '#0B0F19' }}>
                   AS
                 </div>
-                <span className="group-data-[collapsible=icon]:hidden">Alliance Street</span>
+                <div className="flex flex-col group-data-[collapsible=icon]:hidden leading-tight">
+                  <span className="text-sm font-semibold" style={{ color: '#D4AF37', fontFamily: "'Playfair Display', serif" }}>Alliance Street</span>
+                  <span className="text-[10px] text-sidebar-foreground/50 font-sans tracking-widest uppercase">Accounting</span>
+                </div>
              </div>
           </SidebarHeader>
           <SidebarContent>
@@ -344,7 +347,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         asChild 
                         isActive={isActive(item.path)}
                         tooltip={item.title}
-                        className="sidebar-link-animated hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground transition-all duration-200"
+                        className="sidebar-link-animated hover:bg-sidebar-accent data-[active=true]:bg-sidebar-primary/10 transition-all duration-200"
                         data-active={isActive(item.path)}
                       >
                         <Link href={item.path}>
@@ -368,17 +371,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          <SidebarFooter className="border-t border-sidebar-border/50 p-4">
+          <SidebarFooter className="border-t border-sidebar-border p-4">
             <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-auto p-0 hover:bg-transparent w-full flex items-center gap-3 justify-start">
-                    <Avatar className="size-8 border border-white/10">
-                      <AvatarFallback className="bg-primary text-white text-xs">{initials}</AvatarFallback>
+                    <Avatar className="size-8 border border-primary/30 shrink-0" style={{ boxShadow: '0 0 10px rgba(212,175,55,0.2)' }}>
+                      <AvatarFallback className="text-xs font-semibold gold-gradient" style={{ color: '#0B0F19' }}>{initials}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col items-start overflow-hidden group-data-[collapsible=icon]:hidden text-left">
                       <span className="truncate text-sm font-medium text-sidebar-foreground">{user?.name}</span>
-                      <span className="truncate text-xs text-sidebar-foreground/60 capitalize">{user?.role?.replace("_", " ")}</span>
+                      <span className="truncate text-[10px] text-sidebar-foreground/50 capitalize tracking-wide">{user?.role?.replace("_", " ")}</span>
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
@@ -403,29 +406,29 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </Sidebar>
         
         <div className="flex-1 flex flex-col min-h-screen min-w-0 transition-all duration-300 ease-in-out">
-          <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b bg-background/80 px-6 backdrop-blur-md shadow-sm">
-            <SidebarTrigger className="-ml-2" />
-            <div className="h-4 w-px bg-border/60" />
+          <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-4 border-b border-border/60 px-6 backdrop-blur-xl" style={{ background: 'rgba(7,11,20,0.85)', boxShadow: '0 1px 0 rgba(212,175,55,0.06), 0 4px 24px rgba(0,0,0,0.3)' }}>
+            <SidebarTrigger className="-ml-2 text-muted-foreground hover:text-primary transition-colors" />
+            <div className="h-4 w-px bg-border/40" />
             
             <div className="flex-1 flex items-center gap-4">
               <div className="relative max-w-md w-full md:w-96 hidden md:block">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
                 <Input 
                   type="search" 
-                  placeholder="Search clients, tasks, or documents..." 
-                  className="pl-9 bg-secondary/50 border-transparent focus-visible:bg-background focus-visible:border-ring transition-all"
+                  placeholder="Search clients, tasks, documents…" 
+                  className="pl-9 bg-secondary/40 border-border/40 text-sm focus-visible:bg-secondary/60 focus-visible:border-primary/40 transition-all placeholder:text-muted-foreground/40"
                   data-testid="input-search"
                 />
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary" data-testid="button-notifications">
-                    <Bell className="size-5" />
+                  <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary transition-colors" data-testid="button-notifications">
+                    <Bell className="size-4.5" />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 size-5 bg-destructive rounded-full text-[10px] text-white flex items-center justify-center font-bold">{unreadCount}</span>
+                      <span className="absolute -top-0.5 -right-0.5 size-4 bg-destructive rounded-full text-[9px] text-white flex items-center justify-center font-bold">{unreadCount}</span>
                     )}
                   </Button>
                 </DropdownMenuTrigger>

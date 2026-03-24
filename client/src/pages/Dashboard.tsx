@@ -230,11 +230,8 @@ export default function Dashboard() {
           title="Total Clients"
           value={stats.totalClients}
           icon={Users}
-          className="bg-gradient-to-br from-zinc-100 via-zinc-300 to-zinc-600 border-zinc-300/40"
-          iconClassName="bg-primary/20"
+          iconClassName="bg-primary/10 border border-primary/20"
           iconColor="text-primary"
-          titleClassName="text-zinc-600"
-          valueClassName="text-zinc-900"
           onClick={() => setLocation("/clients")}
         />
         <KPICard
@@ -242,8 +239,7 @@ export default function Dashboard() {
           value={stats.overdueVat}
           icon={AlertTriangle}
           description="VAT & CT Returns Pending"
-          className="border-l-4 border-l-destructive border-y-border/50 border-r-border/50"
-          iconClassName="bg-destructive/25"
+          iconClassName="bg-destructive/10 border border-destructive/20"
           iconColor="text-destructive"
           onClick={() => setLocation("/compliance")}
         />
@@ -629,7 +625,6 @@ function EmployeeDashboard({
           value={stats.activeTasks}
           icon={ListTodo}
           description={`${stats.urgentTasks} urgent`}
-          className="bg-gradient-to-br from-card to-primary/5"
           onClick={() => setLocation("/tasks")}
         />
         <KPICard
@@ -637,7 +632,8 @@ function EmployeeDashboard({
           value={overdueTasks.length}
           icon={AlertTriangle}
           description="Need immediate attention"
-          className={cn("border-l-4", overdueTasks.length > 0 ? "border-l-destructive" : "border-l-green-500")}
+          iconClassName={overdueTasks.length > 0 ? "bg-destructive/10 border border-destructive/20" : "bg-success/10 border border-success/20"}
+          iconColor={overdueTasks.length > 0 ? "text-destructive" : "text-success"}
           onClick={() => setLocation("/tasks")}
         />
         <KPICard
