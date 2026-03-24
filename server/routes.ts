@@ -206,6 +206,7 @@ async function checkWeeklyScheduleReminders(): Promise<void> {
         type: "weekly_schedule_reminder",
         relatedTaskId: null,
         status: "unread",
+        country: "UK",
       });
       notifyUser(admin.id, { type: "new_notification", notification: notif });
     }
@@ -272,6 +273,7 @@ async function checkMonthlyDateReminders(): Promise<void> {
           type: "monthly_date_reminder",
           relatedTaskId: null,
           status: "unread",
+          country: "UK",
         });
         notifyUser(admin.id, { type: "new_notification", notification: notif });
       }

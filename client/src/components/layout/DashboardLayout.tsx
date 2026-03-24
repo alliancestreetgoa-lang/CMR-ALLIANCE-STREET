@@ -36,6 +36,7 @@ import {
   MessageCircle,
   Briefcase,
   Terminal,
+  AlarmClock,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -73,7 +74,10 @@ type Notification = {
   status: string;
   relatedTaskId: number | null;
   createdAt: string;
+  country?: string | null;
 };
+
+const REMINDER_TYPES = new Set(["weekly_schedule_reminder", "monthly_date_reminder", "reminder"]);
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [location, setLocation] = useLocation();
@@ -92,15 +96,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const lastKnownMsgCountRef = useRef<number | null>(null);
   const lastKnownNotifCountRef = useRef<number | null>(null);
   const locationRef = useRef(location);
+  const userRoleRef = useRef(user?.role);
   const [unreadMsgCount, setUnreadMsgCount] = useState(0);
   const [showMsgPopup, setShowMsgPopup] = useState(false);
   const [newMsgCount, setNewMsgCount] = useState(0);
+  const [reminderPopupNotifs, setReminderPopupNotifs] = useState<Notification[]>([]);
+  const [showReminderPopup, setShowReminderPopup] = useState(false);
 
   const isActive = (path: string) => location === path;
 
   useEffect(() => {
     locationRef.current = location;
   }, [location]);
+
+  useEffect(() => {
+    userRoleRef.current = user?.role;
+  }, [user]);
 
   const playNotificationSound = useCallback(() => {
     try {
@@ -167,7 +178,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             setNotifications((prev) => [notif, ...prev]);
             setUnreadCount((prev) => prev + 1);
 
-            if (locationRef.current !== "/notifications") {
+            // Show reminder popup for admin/super_admin on reminder-type notifications
+            if (
+              REMINDER_TYPES.has(notif.type) &&
+              (userRoleRef.current === "super_admin" || userRoleRef.current === "admin")
+            ) {
+              setReminderPopupNotifs((prev) => [...prev, notif]);
+              setShowReminderPopup(true);
+              playNotificationSound();
+              showBrowserNotification(notif.title, notif.message);
+            } else if (locationRef.current !== "/notifications") {
               toast({
                 title: notif.title,
                 description: notif.message,
@@ -594,6 +614,74 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Reminder popup — shown to admin/super_admin only when a reminder notification arrives */}
+      {(user?.role === "super_admin" || user?.role === "admin") && (
+        <Dialog
+          open={showReminderPopup}
+          onOpenChange={(open) => {
+            if (!open) {
+              setShowReminderPopup(false);
+              setReminderPopupNotifs([]);
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlarmClock className="h-5 w-5 text-amber-500" />
+                Reminder
+              </DialogTitle>
+              <DialogDescription>
+                {reminderPopupNotifs.length === 1
+                  ? "You have a new reminder."
+                  : `You have ${reminderPopupNotifs.length} new reminders.`}
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[320px] pr-2">
+              <div className="space-y-3">
+                {reminderPopupNotifs.map((n, i) => (
+                  <div
+                    key={n.id ?? i}
+                    className="p-3 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800"
+                  >
+                    <p className="font-semibold text-sm text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                      <AlarmClock className="h-3.5 w-3.5 shrink-0" />
+                      {n.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">{n.message}</p>
+                    {n.country && (
+                      <span className="inline-block mt-1.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 font-medium">
+                        {n.country}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+            <div className="flex justify-end gap-2 mt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setShowReminderPopup(false); setReminderPopupNotifs([]); }}
+              >
+                Dismiss
+              </Button>
+              <Button
+                size="sm"
+                className="bg-amber-600 hover:bg-amber-700 text-white"
+                onClick={() => {
+                  markAllRead();
+                  setShowReminderPopup(false);
+                  setReminderPopupNotifs([]);
+                }}
+              >
+                <CheckCheck className="mr-1 h-4 w-4" /> Mark Read
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       <Dialog open={showProfileEdit} onOpenChange={setShowProfileEdit}>
         <DialogContent className="sm:max-w-md">
