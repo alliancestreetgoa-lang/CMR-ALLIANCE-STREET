@@ -175,7 +175,14 @@ export default function Compliance() {
   const ctNotStarted = clientsWithTax.filter(c => !c.corporateTaxStatus || c.corporateTaxStatus === "Not Started").length;
   const ctInProgress = clientsWithTax.filter(c => c.corporateTaxStatus === "In Progress").length;
   const ctFiled = clientsWithTax.filter(c => c.corporateTaxStatus === "Filed" || c.corporateTaxStatus === "Completed").length;
-  const ctOverdue = clientsWithTax.filter(c => c.corporateTaxStatus === "Overdue").length;
+  const ctOverdue = clientsWithTax.filter(c => {
+    if (!c.corporateTaxDueDate) return c.corporateTaxStatus === "Overdue";
+    return c.corporateTaxStatus === "Overdue" || (
+      differenceInDays(new Date(c.corporateTaxDueDate), new Date()) < 0 &&
+      c.corporateTaxStatus !== "Filed" &&
+      c.corporateTaxStatus !== "Completed"
+    );
+  }).length;
   const ctComplianceRate = ctTotal > 0 ? Math.round((ctFiled / ctTotal) * 100) : 0;
 
   // ---- Upcoming deadlines (next 30 days, not yet filed) ----
@@ -228,7 +235,14 @@ export default function Compliance() {
   const ctDisplayClients = (() => {
     if (ctFilter === "open") return clientsWithTax.filter(c => !c.corporateTaxStatus || c.corporateTaxStatus === "Not Started" || c.corporateTaxStatus === "In Progress");
     if (ctFilter === "filed") return clientsWithTax.filter(c => c.corporateTaxStatus === "Filed" || c.corporateTaxStatus === "Completed");
-    if (ctFilter === "overdue") return clientsWithTax.filter(c => c.corporateTaxStatus === "Overdue");
+    if (ctFilter === "overdue") return clientsWithTax.filter(c => {
+      if (!c.corporateTaxDueDate) return c.corporateTaxStatus === "Overdue";
+      return c.corporateTaxStatus === "Overdue" || (
+        differenceInDays(new Date(c.corporateTaxDueDate), new Date()) < 0 &&
+        c.corporateTaxStatus !== "Filed" &&
+        c.corporateTaxStatus !== "Completed"
+      );
+    });
     return clientsWithTax;
   })();
 
