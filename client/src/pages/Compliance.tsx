@@ -26,6 +26,8 @@ import {
   Users,
   ShieldCheck,
   X,
+  UserCheck,
+  UserX,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -45,6 +47,7 @@ const vatStatuses = ["Not Started", "In Progress", "Filed", "Completed", "Overdu
 const ctStatuses = ["Not Started", "In Progress", "Filed", "Completed", "Overdue"] as const;
 type CountryFilter = "all" | "UK" | "UAE";
 type ViewMode = "dashboard" | "schedule";
+type ClientStatusFilter = "active" | "inactive";
 
 function StatBar({ label, count, total, color }: { label: string; count: number; total: number; color: string }) {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
@@ -65,10 +68,11 @@ function StatBar({ label, count, total, color }: { label: string; count: number;
 }
 
 export default function Compliance() {
-  const [vatRecords, setVatRecords] = useState<VatRecord[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
+  const [allVatRecords, setAllVatRecords] = useState<VatRecord[]>([]);
+  const [allClients, setAllClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [countryFilter, setCountryFilter] = useState<CountryFilter>("all");
+  const [clientStatusFilter, setClientStatusFilter] = useState<ClientStatusFilter>("active");
   const [viewMode, setViewMode] = useState<ViewMode>("dashboard");
   const [vatFilter, setVatFilter] = useState<"all" | "open" | "due7" | "overdue">("all");
   const [ctFilter, setCtFilter] = useState<"all" | "open" | "filed" | "overdue">("all");
@@ -93,13 +97,22 @@ export default function Compliance() {
       api.get("/api/clients"),
     ])
       .then(([vatData, clientData]) => {
-        const activeClients = clientData.filter((c: Client) => c.status === "Active");
-        const activeClientIds = new Set(activeClients.map((c: Client) => c.id));
-        setClients(activeClients);
-        setVatRecords(vatData.filter((r: VatRecord) => activeClientIds.has(r.clientId) && r.isActive !== "false"));
+        setAllClients(clientData);
+        setAllVatRecords(vatData);
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // Derive clients based on clientStatusFilter
+  const clients = clientStatusFilter === "active"
+    ? allClients.filter(c => c.status === "Active")
+    : allClients.filter(c => c.status !== "Active");
+
+  // Derive vatRecords based on the visible clients
+  const clientIds = new Set(clients.map(c => c.id));
+  const vatRecords = clientStatusFilter === "active"
+    ? allVatRecords.filter(r => clientIds.has(r.clientId) && r.isActive !== "false")
+    : allVatRecords.filter(r => clientIds.has(r.clientId));
 
   const allowedCountries = user?.allowedCountries ?? null;
   const allowedSet = allowedCountries ? new Set(allowedCountries.split(",").map(s => s.trim())) : null;
@@ -115,14 +128,14 @@ export default function Compliance() {
   const filteredVatRecords = vatRecords.filter(r => filteredClientIds.has(r.clientId));
 
   const getClientName = (clientId: number) => {
-    const client = clients.find((c) => c.id === clientId);
+    const client = allClients.find((c) => c.id === clientId);
     return client?.companyName ?? "Unknown Client";
   };
 
   const handleVatStatusChange = async (recordId: number, newStatus: string) => {
     try {
       await api.patch(`/api/vat-records/${recordId}`, { status: newStatus });
-      setVatRecords((prev) =>
+      setAllVatRecords((prev) =>
         prev.map((r) => (r.id === recordId ? { ...r, status: newStatus } : r))
       );
       toast({ title: "VAT status updated" });
@@ -134,7 +147,7 @@ export default function Compliance() {
   const handleCtStatusChange = async (clientId: number, newStatus: string) => {
     try {
       await api.patch(`/api/clients/${clientId}`, { corporateTaxStatus: newStatus });
-      setClients((prev) =>
+      setAllClients((prev) =>
         prev.map((c) => (c.id === clientId ? { ...c, corporateTaxStatus: newStatus } : c))
       );
       toast({ title: "Corporate tax status updated" });
@@ -308,6 +321,36 @@ export default function Compliance() {
               </Button>
             </div>
 
+            {/* Active / Inactive client toggle */}
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-1" data-testid="client-status-filter-group">
+              <button
+                data-testid="filter-client-active"
+                onClick={() => setClientStatusFilter("active")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                  clientStatusFilter === "active"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <UserCheck className="h-3.5 w-3.5" />
+                Active
+              </button>
+              <button
+                data-testid="filter-client-inactive"
+                onClick={() => setClientStatusFilter("inactive")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                  clientStatusFilter === "inactive"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <UserX className="h-3.5 w-3.5" />
+                Inactive
+              </button>
+            </div>
+
             {/* Country filter */}
             {showFilterButtons && (
               <div className="flex items-center gap-1 bg-muted rounded-lg p-1" data-testid="country-filter-group">
@@ -347,7 +390,7 @@ export default function Compliance() {
                     <div>
                       <p className="text-sm text-muted-foreground">Total Clients</p>
                       <p className="text-2xl font-bold mt-1" data-testid="text-total-clients">{filteredClients.length}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Active accounts</p>
+                      <p className="text-xs text-muted-foreground mt-1">{clientStatusFilter === "active" ? "Active accounts" : "Inactive accounts"}</p>
                     </div>
                     <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <Users className="h-5 w-5 text-primary" />
