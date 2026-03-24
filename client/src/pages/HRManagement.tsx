@@ -1108,32 +1108,163 @@ function SalarySlipsTab({ users, toast }: { users: UserData[]; toast: any }) {
     const doc = new jsPDF();
     const pw = doc.internal.pageSize.getWidth();
 
-    doc.setFontSize(16);
+    // ── HEADER ────────────────────────────────────────────────────────────────
+    doc.setFontSize(15);
     doc.setFont("helvetica", "bold");
-    doc.text("Alliance Street Accounting Private Limited", pw / 2, 20, { align: "center" });
+    doc.setTextColor(20, 20, 20);
+    doc.text("Alliance Street Accounting Private Limited", pw / 2, 18, { align: "center" });
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100);
+    doc.text("Salary Slip", pw / 2, 25, { align: "center" });
+
     doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-    doc.text("Salary Slip", pw / 2, 28, { align: "center" });
-    doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text(`${monthName} ${slip.year}`, pw / 2, 35, { align: "center" });
+    doc.setTextColor(20);
+    doc.text(`${monthName} ${slip.year}`, pw / 2, 32, { align: "center" });
 
-    doc.setDrawColor(200);
-    doc.line(14, 39, pw - 14, 39);
+    doc.setDrawColor(210);
+    doc.line(14, 36, pw - 14, 36);
 
-    doc.setFontSize(10);
+    // ── EMPLOYEE INFO ─────────────────────────────────────────────────────────
+    doc.setFontSize(9);
+    let y = 44;
+    const leftX = 14;
+    const rightX = pw / 2 + 5;
+
+    const infoRow = (label1: string, val1: string, label2: string, val2: string) => {
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(110);
+      doc.text(label1, leftX, y);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(20);
+      doc.text(val1, leftX + doc.getTextWidth(label1) + 2, y);
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(110);
+      doc.text(label2, rightX, y);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(20);
+      doc.text(val2, rightX + doc.getTextWidth(label2) + 2, y);
+      y += 8;
+    };
+
+    infoRow("Employee Name:", name, "Currency:", currency);
+    infoRow("Working Days:", String(slip.workingDays || "—"), "Present Days (Paid):", String(slip.presentDays || "—"));
+    infoRow("Absent Days:", String(slip.absentDays || "—"), "Status:", slip.status);
+
+    y += 2;
+
+    // ── DAILY ATTENDANCE CALENDAR ─────────────────────────────────────────────
+    const statusShortPDF = (status: string) => {
+      switch (status) {
+        case "Present": return "P";
+        case "Absent": return "A";
+        case "Half Day": return "HD";
+        case "Leave": return "L";
+        case "Week Off": return "WO";
+        case "Holiday": return "H";
+        default: return "—";
+      }
+    };
+
+    const statusColorPDF = (status: string): [number, number, number] => {
+      switch (status) {
+        case "Present":  return [209, 250, 229];
+        case "Absent":   return [254, 202, 202];
+        case "Half Day": return [253, 246, 178];
+        case "Leave":    return [254, 215, 170];
+        case "Week Off": return [226, 232, 240];
+        case "Holiday":  return [233, 213, 255];
+        default:         return [245, 245, 245];
+      }
+    };
+
+    const attendanceMap: Record<number, AttendanceRecord> = {};
+    slipAttendance.forEach((a) => {
+      attendanceMap[new Date(a.date).getDate()] = a;
+    });
+
+    const daysInMonth = new Date(Number(slip.year), Number(slip.month), 0).getDate();
+    const firstDayOfMonth = new Date(Number(slip.year), Number(slip.month) - 1, 1).getDay();
+
+    const weeks: (number | null)[][] = [];
+    let currentWeek: (number | null)[] = Array(firstDayOfMonth).fill(null);
+    for (let day = 1; day <= daysInMonth; day++) {
+      currentWeek.push(day);
+      if (currentWeek.length === 7) { weeks.push(currentWeek); currentWeek = []; }
+    }
+    if (currentWeek.length > 0) {
+      while (currentWeek.length < 7) currentWeek.push(null);
+      weeks.push(currentWeek);
+    }
+
+    // Section header bar
+    doc.setFillColor(240, 240, 240);
+    doc.rect(14, y, pw - 28, 7, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(40);
+    doc.text(`Daily Attendance — ${monthName} ${slip.year}`, 18, y + 5);
+    y += 9;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]],
+      body: weeks.map(week =>
+        week.map(day => {
+          if (!day) return "";
+          const d = new Date(Number(slip.year), Number(slip.month) - 1, day);
+          const dayName = format(d, "EEE");
+          const record = attendanceMap[day];
+          return `${day}\n${dayName}\n${record ? statusShortPDF(record.status) : "—"}`;
+        })
+      ),
+      headStyles: { fillColor: [50, 50, 50], textColor: 255, fontSize: 8, fontStyle: "bold", halign: "center" },
+      bodyStyles: { fontSize: 8, minCellHeight: 18, valign: "middle", halign: "center", cellPadding: 1 },
+      didParseCell: (data: any) => {
+        if (data.section === "body") {
+          const day = weeks[data.row.index]?.[data.column.index];
+          if (day) {
+            const record = attendanceMap[day];
+            data.cell.styles.fillColor = record ? statusColorPDF(record.status) : [245, 245, 245];
+            data.cell.styles.textColor = record ? [30, 30, 30] : [160, 160, 160];
+          } else {
+            data.cell.styles.fillColor = [255, 255, 255];
+          }
+        }
+      },
+      margin: { left: 14, right: 14 },
+    });
+
+    const afterCalendar = (doc as any).lastAutoTable.finalY + 3;
+
+    // Legend
+    doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
-    let y = 47;
-    doc.text(`Employee Name: ${name}`, 14, y);
-    doc.text(`Currency: ${currency}`, pw / 2 + 10, y);
-    y += 7;
-    doc.text(`Working Days: ${slip.workingDays || "—"}`, 14, y);
-    doc.text(`Present Days (Paid): ${slip.presentDays || "—"}`, pw / 2 + 10, y);
-    y += 7;
-    doc.text(`Absent Days: ${slip.absentDays || "—"}`, 14, y);
-    doc.text(`Status: ${slip.status}`, pw / 2 + 10, y);
-    y += 10;
+    const legendItems: { color: [number, number, number]; label: string }[] = [
+      { color: [209, 250, 229], label: "P = Present" },
+      { color: [254, 202, 202], label: "A = Absent" },
+      { color: [253, 246, 178], label: "HD = Half Day" },
+      { color: [254, 215, 170], label: "L = Leave" },
+      { color: [226, 232, 240], label: "WO = Week Off" },
+      { color: [233, 213, 255], label: "H = Holiday" },
+    ];
+    let legendX = 14;
+    legendItems.forEach(({ color, label }) => {
+      doc.setFillColor(...color);
+      doc.rect(legendX, afterCalendar, 3.5, 3.5, "F");
+      doc.setDrawColor(180);
+      doc.rect(legendX, afterCalendar, 3.5, 3.5, "S");
+      doc.setTextColor(60);
+      doc.text(label, legendX + 4.5, afterCalendar + 3);
+      legendX += 29;
+    });
 
+    y = afterCalendar + 9;
+
+    // ── EARNINGS TABLE ────────────────────────────────────────────────────────
     autoTable(doc, {
       startY: y,
       head: [["Earnings", `Amount (${currency})`]],
@@ -1145,20 +1276,22 @@ function SalarySlipsTab({ users, toast }: { users: UserData[]; toast: any }) {
         ["Gross Salary", gross.toFixed(2)],
       ],
       theme: "grid",
-      headStyles: { fillColor: [220, 38, 38], textColor: 255, fontStyle: "bold", fontSize: 10 },
-      bodyStyles: { fontSize: 10 },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
+      headStyles: { fillColor: [40, 40, 40], textColor: 255, fontStyle: "bold", fontSize: 9 },
+      bodyStyles: { fontSize: 9 },
+      alternateRowStyles: { fillColor: [250, 250, 252] },
       columnStyles: { 1: { halign: "right" } },
       didParseCell: (data: any) => {
-        if (data.row.index === 4) {
+        if (data.section === "body" && data.row.index === 4) {
           data.cell.styles.fontStyle = "bold";
-          data.cell.styles.fillColor = [240, 240, 240];
+          data.cell.styles.fillColor = [238, 238, 238];
         }
       },
+      margin: { left: 14, right: 14 },
     });
 
-    const afterEarnings = (doc as any).lastAutoTable.finalY + 6;
+    const afterEarnings = (doc as any).lastAutoTable.finalY + 5;
 
+    // ── DEDUCTIONS TABLE ──────────────────────────────────────────────────────
     autoTable(doc, {
       startY: afterEarnings,
       head: [["Deductions", `Amount (${currency})`]],
@@ -1169,35 +1302,48 @@ function SalarySlipsTab({ users, toast }: { users: UserData[]; toast: any }) {
         ["Total Deductions", totalDeductions.toFixed(2)],
       ],
       theme: "grid",
-      headStyles: { fillColor: [220, 38, 38], textColor: 255, fontStyle: "bold", fontSize: 10 },
-      bodyStyles: { fontSize: 10 },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
+      headStyles: { fillColor: [40, 40, 40], textColor: 255, fontStyle: "bold", fontSize: 9 },
+      bodyStyles: { fontSize: 9 },
+      alternateRowStyles: { fillColor: [250, 250, 252] },
       columnStyles: { 1: { halign: "right" } },
       didParseCell: (data: any) => {
-        if (data.row.index === 3) {
+        if (data.section === "body" && data.row.index === 3) {
           data.cell.styles.fontStyle = "bold";
-          data.cell.styles.fillColor = [240, 240, 240];
+          data.cell.styles.fillColor = [238, 238, 238];
         }
       },
+      margin: { left: 14, right: 14 },
     });
 
-    const afterDeductions = (doc as any).lastAutoTable.finalY + 10;
+    const afterDeductions = (doc as any).lastAutoTable.finalY + 8;
 
+    // ── NET SALARY ────────────────────────────────────────────────────────────
     doc.setFillColor(255, 240, 240);
-    doc.roundedRect(14, afterDeductions, pw - 28, 14, 3, 3, "F");
-    doc.setFontSize(13);
+    doc.roundedRect(14, afterDeductions, pw - 28, 14, 2, 2, "F");
+    doc.setDrawColor(220, 38, 38);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(14, afterDeductions, pw - 28, 14, 2, 2, "S");
+    doc.setLineWidth(0.2);
+    doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(220, 38, 38);
+    doc.setTextColor(20);
     doc.text("Net Salary", 20, afterDeductions + 9);
+    doc.setTextColor(220, 38, 38);
     doc.text(`${currency} ${net.toFixed(2)}`, pw - 20, afterDeductions + 9, { align: "right" });
 
-    doc.setTextColor(0, 0, 0);
+    // ── FOOTER ────────────────────────────────────────────────────────────────
+    const footerY = afterDeductions + 26;
+    doc.setDrawColor(220);
+    doc.line(14, footerY - 4, pw - 14, footerY - 4);
+    doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    const footerY = afterDeductions + 28;
+    doc.setTextColor(130);
     doc.text("This is a computer-generated document and does not require a signature.", pw / 2, footerY, { align: "center" });
     if (slip.generatedAt) {
-      doc.text(`Generated on: ${format(new Date(slip.generatedAt), "MMMM d, yyyy 'at' h:mm a")}`, pw / 2, footerY + 5, { align: "center" });
+      doc.text(
+        `Generated on: ${format(new Date(slip.generatedAt), "MMMM d, yyyy 'at' h:mm a")}`,
+        pw / 2, footerY + 5, { align: "center" }
+      );
     }
 
     doc.save(`Salary_Slip_${name.replace(/\s+/g, "_")}_${monthName}_${slip.year}.pdf`);
@@ -1764,10 +1910,40 @@ function SalarySlipPrintView({
     <div className="salary-slip-print" data-testid="salary-slip-print">
       <style>{`
         @media print {
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           body * { visibility: hidden; }
           .salary-slip-print, .salary-slip-print * { visibility: visible; }
-          .salary-slip-print { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; font-size: 11px; }
-          button, [role="dialog"] > div:last-child { display: none !important; }
+          .salary-slip-print {
+            position: fixed; left: 0; top: 0; width: 100%; padding: 24px;
+            background: #ffffff !important; color: #111111 !important;
+            font-size: 11px;
+          }
+          .salary-slip-print .print-bg-override { background: #ffffff !important; }
+          .salary-slip-print h2, .salary-slip-print h3 { color: #111111 !important; }
+          .salary-slip-print [class*="muted"] { color: #666666 !important; }
+          .salary-slip-print [class*="bg-muted"] { background-color: #f3f4f6 !important; }
+          .salary-slip-print [class*="bg-primary"] { background-color: #fff0f0 !important; }
+          .salary-slip-print [class*="text-primary"] { color: #dc2626 !important; }
+          .salary-slip-print [class*="border"] { border-color: #e5e7eb !important; }
+          .salary-slip-print td, .salary-slip-print th { color: #111111 !important; border-color: #e5e7eb !important; }
+          .salary-slip-print .bg-green-100 { background-color: #d1fae5 !important; }
+          .salary-slip-print .bg-red-100 { background-color: #fee2e2 !important; }
+          .salary-slip-print .bg-yellow-100 { background-color: #fef9c3 !important; }
+          .salary-slip-print .bg-orange-100 { background-color: #ffedd5 !important; }
+          .salary-slip-print .bg-slate-100 { background-color: #f1f5f9 !important; }
+          .salary-slip-print .bg-purple-100 { background-color: #f3e8ff !important; }
+          .salary-slip-print .text-green-800 { color: #166534 !important; }
+          .salary-slip-print .text-red-800 { color: #991b1b !important; }
+          .salary-slip-print .text-yellow-800 { color: #854d0e !important; }
+          .salary-slip-print .text-orange-800 { color: #9a3412 !important; }
+          .salary-slip-print .text-slate-800 { color: #1e293b !important; }
+          .salary-slip-print .text-purple-800 { color: #6b21a8 !important; }
+          .salary-slip-print .dark\:bg-green-900\/30 { background-color: #d1fae5 !important; }
+          .salary-slip-print .dark\:bg-red-900\/30 { background-color: #fee2e2 !important; }
+          .salary-slip-print .dark\:text-green-400 { color: #166534 !important; }
+          .salary-slip-print .dark\:text-red-400 { color: #991b1b !important; }
+          .salary-slip-print .rounded-lg { border-radius: 6px !important; }
+          button, [data-testid="button-print-slip"], [data-testid="button-download-slip-pdf"] { display: none !important; }
         }
       `}</style>
 
