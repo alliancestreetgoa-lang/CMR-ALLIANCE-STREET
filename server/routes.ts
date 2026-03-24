@@ -212,6 +212,73 @@ async function checkWeeklyScheduleReminders(): Promise<void> {
   }
 }
 
+// Monthly date reminders: fire at 11:00 AM every day, D-5 through D+0 for each date
+async function checkMonthlyDateReminders(): Promise<void> {
+  const now = new Date();
+  if (now.getHours() !== 11 || now.getMinutes() !== 0) return;
+
+  const allClients = await storage.getClients();
+  const allUsers   = await storage.getUsers();
+  const admins     = allUsers.filter(u => u.role === "admin" || u.role === "super_admin");
+
+  // Dedup: don't send the same message more than once in a 23-hour window
+  const twentyThreeHoursAgo = new Date(now.getTime() - 23 * 60 * 60 * 1000);
+
+  for (const client of allClients) {
+    if (client.status !== "Active" || client.country !== "UK") continue;
+
+    const checks: { flag: string | null; date: string | null; label: string }[] = [
+      { flag: client.vatQuarterlyUk, date: client.vatQuarterlyDraft1Date, label: "VAT Draft 1" },
+      { flag: client.vatQuarterlyUk, date: client.vatQuarterlyDraft2Date, label: "VAT Draft 2" },
+      { flag: client.vatQuarterlyUk, date: client.vatQuarterlySubmitDate, label: "VAT Submit"  },
+      { flag: client.plMonthly,      date: client.plMonthlyDate,          label: "P&L Monthly" },
+      { flag: client.plQuarterly,    date: client.plQuarterlyDate,        label: "P&L Quarterly" },
+    ];
+
+    for (const { flag, date, label } of checks) {
+      if (flag !== "true" || !date) continue;
+
+      const dueDate = new Date(date);
+      if (isNaN(dueDate.getTime())) continue;
+
+      // Normalise to midnight for day-diff calculation
+      const dueMidnight = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+      const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const daysUntil = Math.round((dueMidnight.getTime() - todayMidnight.getTime()) / 86400000);
+
+      // Fire on D-5, D-4, D-3, D-2, D-1 and D+0
+      if (daysUntil < 0 || daysUntil > 5) continue;
+
+      const dueFmt = dueDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+      const dayLabel = daysUntil === 0 ? "due today" : `due in ${daysUntil} day${daysUntil === 1 ? "" : "s"}`;
+      const msg = `${label} for ${client.companyName} is ${dayLabel} (${dueFmt})`;
+
+      for (const admin of admins) {
+        const recentDup = await db
+          .select()
+          .from(notifications)
+          .where(and(
+            eq(notifications.userId, admin.id),
+            eq(notifications.type, "monthly_date_reminder"),
+            eq(notifications.message, msg),
+            gte(notifications.createdAt, twentyThreeHoursAgo)
+          ));
+        if (recentDup.length > 0) continue;
+
+        const notif = await storage.createNotification({
+          userId: admin.id,
+          title: daysUntil === 0 ? "Monthly Deadline – Today" : `Monthly Deadline – ${daysUntil}d Away`,
+          message: msg,
+          type: "monthly_date_reminder",
+          relatedTaskId: null,
+          status: "unread",
+        });
+        notifyUser(admin.id, { type: "new_notification", notification: notif });
+      }
+    }
+  }
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -1434,11 +1501,17 @@ Consider:
   }, 3600000);
 
   // Check weekly schedule reminders every minute so we hit 19:00, 20:00, 11:30, 12:30 exactly
+  // Also check monthly date reminders at 11:00 AM (D-5 through D+0)
   setInterval(async () => {
     try {
       await checkWeeklyScheduleReminders();
     } catch (err) {
       console.error("Weekly schedule reminder error:", err);
+    }
+    try {
+      await checkMonthlyDateReminders();
+    } catch (err) {
+      console.error("Monthly date reminder error:", err);
     }
   }, 60000);
 
