@@ -230,7 +230,11 @@ export default function Dashboard() {
           title="Total Clients"
           value={stats.totalClients}
           icon={Users}
-          className="bg-gradient-to-br from-white to-secondary/20"
+          className="bg-gradient-to-br from-zinc-100 via-zinc-300 to-zinc-600 border-zinc-300/40"
+          iconClassName="bg-primary/20"
+          iconColor="text-primary"
+          titleClassName="text-zinc-600"
+          valueClassName="text-zinc-900"
           onClick={() => setLocation("/clients")}
         />
         <KPICard
@@ -238,7 +242,9 @@ export default function Dashboard() {
           value={stats.overdueVat}
           icon={AlertTriangle}
           description="VAT & CT Returns Pending"
-          className="border-l-4 border-l-destructive"
+          className="border-l-4 border-l-destructive border-y-border/50 border-r-border/50"
+          iconClassName="bg-destructive/25"
+          iconColor="text-destructive"
           onClick={() => setLocation("/compliance")}
         />
         <KPICard
