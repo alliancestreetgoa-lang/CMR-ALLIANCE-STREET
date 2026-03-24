@@ -24,6 +24,7 @@ import {
   Clock,
   Users,
   ShieldCheck,
+  X,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -68,6 +69,8 @@ export default function Compliance() {
   const [loading, setLoading] = useState(true);
   const [countryFilter, setCountryFilter] = useState<CountryFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("dashboard");
+  const [vatFilter, setVatFilter] = useState<"all" | "open" | "due7" | "overdue">("all");
+  const [ctFilter, setCtFilter] = useState<"all" | "open" | "filed" | "overdue">("all");
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -206,6 +209,31 @@ export default function Compliance() {
         type: "ct" as const,
       })),
   ].sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+
+  // Filtered display lists for the schedule cards
+  const vatDisplayRecords = (() => {
+    if (vatFilter === "open") return sortedRecords.filter(r => r.status === "Not Started" || r.status === "In Progress");
+    if (vatFilter === "due7") return sortedRecords.filter(r => {
+      if (!r.vatDueDate || r.status === "Filed" || r.status === "Completed") return false;
+      const d = differenceInDays(new Date(r.vatDueDate), new Date());
+      return d >= 0 && d <= 7;
+    });
+    if (vatFilter === "overdue") return sortedRecords.filter(r => {
+      if (!r.vatDueDate) return false;
+      return r.status === "Overdue" || (differenceInDays(new Date(r.vatDueDate), new Date()) < 0 && r.status !== "Filed" && r.status !== "Completed");
+    });
+    return sortedRecords;
+  })();
+
+  const ctDisplayClients = (() => {
+    if (ctFilter === "open") return clientsWithTax.filter(c => !c.corporateTaxStatus || c.corporateTaxStatus === "Not Started" || c.corporateTaxStatus === "In Progress");
+    if (ctFilter === "filed") return clientsWithTax.filter(c => c.corporateTaxStatus === "Filed" || c.corporateTaxStatus === "Completed");
+    if (ctFilter === "overdue") return clientsWithTax.filter(c => c.corporateTaxStatus === "Overdue");
+    return clientsWithTax;
+  })();
+
+  const vatFilterLabel = vatFilter === "open" ? "Open Returns" : vatFilter === "due7" ? "Due Within 7 Days" : vatFilter === "overdue" ? "Overdue" : null;
+  const ctFilterLabel = ctFilter === "open" ? "Open Returns" : ctFilter === "filed" ? "Filed / Completed" : ctFilter === "overdue" ? "Overdue" : null;
 
   if (loading) {
     return (
@@ -508,46 +536,94 @@ export default function Compliance() {
             
             <TabsContent value="vat" className="mt-6 space-y-6">
               <div className="grid gap-4 md:grid-cols-3">
-                <Card className="bg-primary/5 border-primary/20" data-testid="card-open-vat">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-primary">Open VAT Returns</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold" data-testid="text-open-vat-count">{openVatReturns}</div>
-                    <p className="text-xs text-muted-foreground">For current quarter</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-warning/5 border-warning/20" data-testid="card-due-7-days">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-warning">Due Within 7 Days</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold" data-testid="text-due-7-days-count">{dueWithin7Days}</div>
-                    <p className="text-xs text-muted-foreground">Requires immediate attention</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-destructive/5 border-destructive/20" data-testid="card-overdue">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-destructive">Overdue</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold" data-testid="text-overdue-count">{vatOverdue}</div>
-                    <p className="text-xs text-muted-foreground">Penalty risk high</p>
-                  </CardContent>
-                </Card>
+                <button
+                  onClick={() => setVatFilter(vatFilter === "open" ? "all" : "open")}
+                  className="text-left"
+                  data-testid="card-open-vat"
+                >
+                  <Card className={cn(
+                    "transition-all hover-elevate bg-primary/5 border-primary/20",
+                    vatFilter === "open" && "ring-2 ring-primary"
+                  )}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <CardTitle className="text-sm font-medium text-primary">Open VAT Returns</CardTitle>
+                        {vatFilter === "open" && <X className="h-3.5 w-3.5 text-primary shrink-0" />}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold" data-testid="text-open-vat-count">{openVatReturns}</div>
+                      <p className="text-xs text-muted-foreground">{vatFilter === "open" ? "Click to clear filter" : "Click to filter list"}</p>
+                    </CardContent>
+                  </Card>
+                </button>
+                <button
+                  onClick={() => setVatFilter(vatFilter === "due7" ? "all" : "due7")}
+                  className="text-left"
+                  data-testid="card-due-7-days"
+                >
+                  <Card className={cn(
+                    "transition-all hover-elevate bg-warning/5 border-warning/20",
+                    vatFilter === "due7" && "ring-2 ring-warning"
+                  )}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <CardTitle className="text-sm font-medium text-warning">Due Within 7 Days</CardTitle>
+                        {vatFilter === "due7" && <X className="h-3.5 w-3.5 text-warning shrink-0" />}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold" data-testid="text-due-7-days-count">{dueWithin7Days}</div>
+                      <p className="text-xs text-muted-foreground">{vatFilter === "due7" ? "Click to clear filter" : "Click to filter list"}</p>
+                    </CardContent>
+                  </Card>
+                </button>
+                <button
+                  onClick={() => setVatFilter(vatFilter === "overdue" ? "all" : "overdue")}
+                  className="text-left"
+                  data-testid="card-overdue"
+                >
+                  <Card className={cn(
+                    "transition-all hover-elevate bg-destructive/5 border-destructive/20",
+                    vatFilter === "overdue" && "ring-2 ring-destructive"
+                  )}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <CardTitle className="text-sm font-medium text-destructive">Overdue</CardTitle>
+                        {vatFilter === "overdue" && <X className="h-3.5 w-3.5 text-destructive shrink-0" />}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold" data-testid="text-overdue-count">{vatOverdue}</div>
+                      <p className="text-xs text-muted-foreground">{vatFilter === "overdue" ? "Click to clear filter" : "Click to filter list"}</p>
+                    </CardContent>
+                  </Card>
+                </button>
               </div>
 
               <Card className="border-border/60">
                 <CardHeader>
-                  <CardTitle>VAT Schedule</CardTitle>
-                  <CardDescription>
-                    Upcoming filing deadlines
-                    {countryFilter !== "all" ? ` — ${countryFilter} clients` : " for all clients"}.
-                  </CardDescription>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div>
+                      <CardTitle>VAT Schedule</CardTitle>
+                      <CardDescription>
+                        {vatFilterLabel ? (
+                          <span>Showing: <span className="font-medium text-foreground">{vatFilterLabel}</span> — {vatDisplayRecords.length} record{vatDisplayRecords.length !== 1 ? "s" : ""}</span>
+                        ) : (
+                          <>Upcoming filing deadlines{countryFilter !== "all" ? ` — ${countryFilter} clients` : " for all clients"}.</>
+                        )}
+                      </CardDescription>
+                    </div>
+                    {vatFilterLabel && (
+                      <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setVatFilter("all")} data-testid="button-clear-vat-filter">
+                        <X className="h-3 w-3" /> Clear filter
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
-                    {sortedRecords.map((record) => {
+                    {vatDisplayRecords.map((record) => {
                       const daysRemaining = getDaysRemaining(record.vatDueDate);
                       const client = clients.find(c => c.id === record.clientId);
                       return (
@@ -615,9 +691,9 @@ export default function Compliance() {
                         </div>
                       );
                     })}
-                    {sortedRecords.length === 0 && (
+                    {vatDisplayRecords.length === 0 && (
                       <div className="text-center text-muted-foreground py-8" data-testid="text-no-vat-records">
-                        No VAT records found{countryFilter !== "all" ? ` for ${countryFilter} clients` : ""}.
+                        {vatFilterLabel ? `No ${vatFilterLabel.toLowerCase()} VAT records.` : `No VAT records found${countryFilter !== "all" ? ` for ${countryFilter} clients` : ""}.`}
                       </div>
                     )}
                   </div>
@@ -627,46 +703,94 @@ export default function Compliance() {
             
             <TabsContent value="ct" className="mt-6 space-y-6">
               <div className="grid gap-4 md:grid-cols-3">
-                <Card className="bg-primary/5 border-primary/20" data-testid="card-ct-open">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-primary">Open CT Returns</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{ctNotStarted + ctInProgress}</div>
-                    <p className="text-xs text-muted-foreground">Not yet filed</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-green-500/5 border-green-500/20" data-testid="card-ct-filed">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-green-600 dark:text-green-400">Filed / Completed</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{ctFiled}</div>
-                    <p className="text-xs text-muted-foreground">{ctComplianceRate}% compliance rate</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-destructive/5 border-destructive/20" data-testid="card-ct-overdue">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-destructive">Overdue</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{ctOverdue}</div>
-                    <p className="text-xs text-muted-foreground">Penalty risk high</p>
-                  </CardContent>
-                </Card>
+                <button
+                  onClick={() => setCtFilter(ctFilter === "open" ? "all" : "open")}
+                  className="text-left"
+                  data-testid="card-ct-open"
+                >
+                  <Card className={cn(
+                    "transition-all hover-elevate bg-primary/5 border-primary/20",
+                    ctFilter === "open" && "ring-2 ring-primary"
+                  )}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <CardTitle className="text-sm font-medium text-primary">Open CT Returns</CardTitle>
+                        {ctFilter === "open" && <X className="h-3.5 w-3.5 text-primary shrink-0" />}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{ctNotStarted + ctInProgress}</div>
+                      <p className="text-xs text-muted-foreground">{ctFilter === "open" ? "Click to clear filter" : "Click to filter list"}</p>
+                    </CardContent>
+                  </Card>
+                </button>
+                <button
+                  onClick={() => setCtFilter(ctFilter === "filed" ? "all" : "filed")}
+                  className="text-left"
+                  data-testid="card-ct-filed"
+                >
+                  <Card className={cn(
+                    "transition-all hover-elevate bg-green-500/5 border-green-500/20",
+                    ctFilter === "filed" && "ring-2 ring-green-500"
+                  )}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <CardTitle className="text-sm font-medium text-green-600 dark:text-green-400">Filed / Completed</CardTitle>
+                        {ctFilter === "filed" && <X className="h-3.5 w-3.5 text-green-600 dark:text-green-400 shrink-0" />}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{ctFiled}</div>
+                      <p className="text-xs text-muted-foreground">{ctFilter === "filed" ? "Click to clear filter" : `${ctComplianceRate}% compliance rate`}</p>
+                    </CardContent>
+                  </Card>
+                </button>
+                <button
+                  onClick={() => setCtFilter(ctFilter === "overdue" ? "all" : "overdue")}
+                  className="text-left"
+                  data-testid="card-ct-overdue"
+                >
+                  <Card className={cn(
+                    "transition-all hover-elevate bg-destructive/5 border-destructive/20",
+                    ctFilter === "overdue" && "ring-2 ring-destructive"
+                  )}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <CardTitle className="text-sm font-medium text-destructive">Overdue</CardTitle>
+                        {ctFilter === "overdue" && <X className="h-3.5 w-3.5 text-destructive shrink-0" />}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{ctOverdue}</div>
+                      <p className="text-xs text-muted-foreground">{ctFilter === "overdue" ? "Click to clear filter" : "Click to filter list"}</p>
+                    </CardContent>
+                  </Card>
+                </button>
               </div>
 
               <Card className="border-border/60">
                 <CardHeader>
-                  <CardTitle>Corporate Tax Schedule</CardTitle>
-                  <CardDescription>
-                    Corporate tax filing deadlines
-                    {countryFilter !== "all" ? ` — ${countryFilter} clients` : " for all clients"}.
-                  </CardDescription>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div>
+                      <CardTitle>Corporate Tax Schedule</CardTitle>
+                      <CardDescription>
+                        {ctFilterLabel ? (
+                          <span>Showing: <span className="font-medium text-foreground">{ctFilterLabel}</span> — {ctDisplayClients.length} client{ctDisplayClients.length !== 1 ? "s" : ""}</span>
+                        ) : (
+                          <>Corporate tax filing deadlines{countryFilter !== "all" ? ` — ${countryFilter} clients` : " for all clients"}.</>
+                        )}
+                      </CardDescription>
+                    </div>
+                    {ctFilterLabel && (
+                      <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setCtFilter("all")} data-testid="button-clear-ct-filter">
+                        <X className="h-3 w-3" /> Clear filter
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
-                    {clientsWithTax.map((client) => {
+                    {ctDisplayClients.map((client) => {
                       const daysRemaining = getDaysRemaining(client.corporateTaxDueDate ?? null);
                       return (
                         <div key={client.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-border/50 hover:bg-secondary/30 transition-colors" data-testid={`row-ct-${client.id}`}>
@@ -730,9 +854,9 @@ export default function Compliance() {
                         </div>
                       );
                     })}
-                    {clientsWithTax.length === 0 && (
+                    {ctDisplayClients.length === 0 && (
                       <div className="text-center text-muted-foreground py-8" data-testid="text-no-ct-records">
-                        No corporate tax records found{countryFilter !== "all" ? ` for ${countryFilter} clients` : ""}.
+                        {ctFilterLabel ? `No ${ctFilterLabel.toLowerCase()} CT records.` : `No corporate tax records found${countryFilter !== "all" ? ` for ${countryFilter} clients` : ""}.`}
                       </div>
                     )}
                   </div>
