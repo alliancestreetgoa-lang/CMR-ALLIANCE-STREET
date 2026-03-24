@@ -47,7 +47,10 @@ type TaskData = {
 type ClientData = {
   id: number;
   companyName: string;
+  country?: string;
 };
+
+type CountryFilter = "all" | "UK" | "UAE";
 
 type UserData = {
   id: number;
@@ -57,6 +60,7 @@ type UserData = {
 export default function Tasks() {
   const { user } = useAuth();
   const [view, setView] = useState<"board" | "list">("board");
+  const [countryFilter, setCountryFilter] = useState<CountryFilter>("all");
   const [tasks, setTasks] = useState<TaskData[]>([]);
   const [clients, setClients] = useState<ClientData[]>([]);
   const [usersMap, setUsersMap] = useState<Record<number, string>>({});
@@ -227,12 +231,28 @@ export default function Tasks() {
     }
   }
 
+  // Determine which country buttons to show based on user permissions
+  const allowedCountries = user?.allowedCountries ?? null;
+  const allowedSet = allowedCountries ? new Set(allowedCountries.split(",").map(s => s.trim())) : null;
+  const showUK = !allowedSet || allowedSet.has("UK");
+  const showUAE = !allowedSet || allowedSet.has("UAE");
+  const showFilterButtons = showUK && showUAE;
+
+  // Filter tasks by country via clientId lookup
+  const filteredClientIds = countryFilter === "all"
+    ? null
+    : new Set(clients.filter(c => c.country === countryFilter).map(c => c.id));
+
+  const filteredTasks = filteredClientIds
+    ? tasks.filter(t => filteredClientIds.has(t.clientId))
+    : tasks;
+
   const columns: Record<string, TaskData[]> = {
-    "Not Started": tasks.filter((t) => t.status === "Not Started"),
-    "In Process": tasks.filter((t) => t.status === "In Process"),
-    "Completed": tasks.filter((t) => t.status === "Completed"),
-    ...(isAdmin ? { "Review": tasks.filter((t) => t.status === "Review") } : {}),
-    ...(isAdmin ? { "Done": tasks.filter((t) => t.status === "Done") } : {}),
+    "Not Started": filteredTasks.filter((t) => t.status === "Not Started"),
+    "In Process": filteredTasks.filter((t) => t.status === "In Process"),
+    "Completed": filteredTasks.filter((t) => t.status === "Completed"),
+    ...(isAdmin ? { "Review": filteredTasks.filter((t) => t.status === "Review") } : {}),
+    ...(isAdmin ? { "Done": filteredTasks.filter((t) => t.status === "Done") } : {}),
   };
 
   const allUsers = Object.entries(usersMap).map(([id, name]) => ({
@@ -258,7 +278,7 @@ export default function Tasks() {
             <h1 className="text-3xl font-heading font-bold tracking-tight text-foreground">Task Management</h1>
             <p className="text-muted-foreground">Assign, track, and complete client deliverables.</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <div className="flex bg-muted rounded-lg p-1">
               <Button
                 variant={view === "board" ? "secondary" : "ghost"}
@@ -279,6 +299,25 @@ export default function Tasks() {
                 List
               </Button>
             </div>
+            {showFilterButtons && (
+              <div className="flex items-center gap-1 bg-muted rounded-lg p-1" data-testid="task-country-filter">
+                {(["all", "UK", "UAE"] as CountryFilter[]).map((f) => (
+                  <button
+                    key={f}
+                    data-testid={`filter-task-country-${f}`}
+                    onClick={() => setCountryFilter(f)}
+                    className={cn(
+                      "px-3 py-1 rounded-md text-xs font-medium transition-colors",
+                      countryFilter === f
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {f === "all" ? "All" : f}
+                  </button>
+                ))}
+              </div>
+            )}
             {isAdmin && (
               <Button
                 variant="outline"
