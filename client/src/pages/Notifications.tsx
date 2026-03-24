@@ -195,10 +195,9 @@ export default function Notifications() {
   const showUAE = !allowedSet || allowedSet.has("UAE");
   const showFilterButtons = showUK && showUAE;
 
-  // Apply country filter — null country means "system-wide", always shown
+  // Apply country filter — "all" shows everything; UK/UAE shows only that country's notifications
   const countryFiltered = notifications.filter(n => {
     if (countryFilter === "all") return true;
-    if (n.country === null) return true; // system-wide notifications always show
     return n.country === countryFilter;
   });
 
@@ -470,7 +469,7 @@ export default function Notifications() {
           <TabsList data-testid="notification-tabs">
             <TabsTrigger value="all" data-testid="tab-all">
               All
-              <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-[10px]">{notifications.length}</Badge>
+              <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-[10px]">{countryFiltered.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="unread" data-testid="tab-unread">
               Unread
