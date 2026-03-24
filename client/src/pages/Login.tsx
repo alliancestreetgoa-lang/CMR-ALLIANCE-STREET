@@ -114,7 +114,7 @@ export default function Login() {
       </div>
 
       {/* Right Panel — Login Form */}
-      <div className="flex-1 lg:max-w-[480px] flex flex-col items-center justify-between bg-[#f7f8f6] px-6 py-10 lg:px-12">
+      <div className="flex-1 w-full lg:max-w-[480px] flex flex-col items-center justify-between bg-[#f7f8f6] px-6 py-10 lg:px-12">
 
         {/* Mobile logo (hidden on desktop) */}
         <div className="lg:hidden flex flex-col items-center gap-2 mb-6">
