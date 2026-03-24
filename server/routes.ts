@@ -572,12 +572,14 @@ export async function registerRoutes(
       
       const task = await storage.createTask(taskData);
 
+      const taskClient = task.clientId ? await storage.getClient(task.clientId) : undefined;
       const taskNotif = await storage.createNotification({
         userId: task.assignedTo,
         title: "New Task Assigned",
         message: `You have been assigned a new task: "${task.title}" (Priority: ${task.priority})`,
         type: "task_assigned",
         relatedTaskId: task.id,
+        country: taskClient?.country ?? undefined,
         status: "unread",
       });
       notifyUser(task.assignedTo, { type: "new_notification", notification: taskNotif });
@@ -616,6 +618,7 @@ export async function registerRoutes(
         const notifyUsers = new Set([existing.assignedTo, existing.assignedBy, ...adminUsers.map(u => u.id)]);
         const changedByUser = allUsers.find(u => u.id === req.user!.userId);
         const changedByName = changedByUser?.name || "Someone";
+        const existingClient = existing.clientId ? await storage.getClient(existing.clientId) : undefined;
         for (const uid of notifyUsers) {
           const sNotif = await storage.createNotification({
             userId: uid,
@@ -623,6 +626,7 @@ export async function registerRoutes(
             message: `${changedByName} changed task "${existing.title}" from ${existing.status} to ${req.body.status}`,
             type: "task_update",
             relatedTaskId: id,
+            country: existingClient?.country ?? undefined,
             status: "unread",
           });
           notifyUser(uid, { type: "new_notification", notification: sNotif });
@@ -630,12 +634,14 @@ export async function registerRoutes(
       }
 
       if (req.body.assignedTo && req.body.assignedTo !== existing.assignedTo) {
+        const reassignClient = existing.clientId ? await storage.getClient(existing.clientId) : undefined;
         const rNotif = await storage.createNotification({
           userId: req.body.assignedTo,
           title: "Task Reassigned",
           message: `You have been assigned the task: "${existing.title}"`,
           type: "task_assigned",
           relatedTaskId: id,
+          country: reassignClient?.country ?? undefined,
           status: "unread",
         });
         notifyUser(req.body.assignedTo, { type: "new_notification", notification: rNotif });
@@ -729,13 +735,14 @@ export async function registerRoutes(
 
   app.post("/api/notifications", authenticate, async (req, res) => {
     try {
-      const { title, message, type } = req.body;
+      const { title, message, type, country } = req.body;
       if (!title || !message) return res.status(400).json({ message: "title and message required" });
       const notif = await storage.createNotification({
         userId: req.user!.userId,
         title,
         message,
         type: type || "info",
+        country: country ?? undefined,
         status: "unread",
       });
       notifyUser(req.user!.userId, { type: "new_notification", notification: notif });

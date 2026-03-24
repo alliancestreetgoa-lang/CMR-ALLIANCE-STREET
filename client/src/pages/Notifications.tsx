@@ -1,6 +1,8 @@
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +32,8 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
+type CountryFilter = "all" | "UK" | "UAE";
+
 type Notification = {
   id: number;
   title: string;
@@ -37,6 +41,7 @@ type Notification = {
   type: string;
   status: string;
   relatedTaskId: number | null;
+  country: string | null;
   createdAt: string;
 };
 
@@ -94,9 +99,11 @@ function getNotificationBadge(type: string) {
 
 export default function Notifications() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
+  const [countryFilter, setCountryFilter] = useState<CountryFilter>("all");
   const [preferences, setPreferences] = useState<NotificationPreferences>(defaultPrefs);
   const [showSettings, setShowSettings] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
@@ -181,7 +188,21 @@ export default function Notifications() {
     }
   }
 
-  const filtered = notifications.filter(n => {
+  // Country filter visibility (same logic as Tasks page)
+  const allowedCountries = user?.allowedCountries ?? null;
+  const allowedSet = allowedCountries ? new Set(allowedCountries.split(",").map(s => s.trim())) : null;
+  const showUK = !allowedSet || allowedSet.has("UK");
+  const showUAE = !allowedSet || allowedSet.has("UAE");
+  const showFilterButtons = showUK && showUAE;
+
+  // Apply country filter — null country means "system-wide", always shown
+  const countryFiltered = notifications.filter(n => {
+    if (countryFilter === "all") return true;
+    if (n.country === null) return true; // system-wide notifications always show
+    return n.country === countryFilter;
+  });
+
+  const filtered = countryFiltered.filter(n => {
     switch (activeTab) {
       case "unread":
         return n.status === "unread";
@@ -196,10 +217,10 @@ export default function Notifications() {
     }
   });
 
-  const unreadCount = notifications.filter(n => n.status === "unread").length;
-  const taskCount = notifications.filter(n => n.type === "task_assigned" || n.type === "task_update").length;
-  const deadlineCount = notifications.filter(n => n.type === "deadline_warning").length;
-  const vatCount = notifications.filter(n => n.type === "vat_deadline").length;
+  const unreadCount = countryFiltered.filter(n => n.status === "unread").length;
+  const taskCount = countryFiltered.filter(n => n.type === "task_assigned" || n.type === "task_update").length;
+  const deadlineCount = countryFiltered.filter(n => n.type === "deadline_warning").length;
+  const vatCount = countryFiltered.filter(n => n.type === "vat_deadline").length;
 
   if (loading) {
     return (
@@ -228,7 +249,26 @@ export default function Notifications() {
               <span className="text-xs text-green-600 dark:text-green-400">Real-time updates active</span>
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {showFilterButtons && (
+              <div className="flex items-center gap-1 bg-muted rounded-lg p-1" data-testid="notif-country-filter">
+                {(["all", "UK", "UAE"] as CountryFilter[]).map((f) => (
+                  <button
+                    key={f}
+                    data-testid={`filter-notif-country-${f}`}
+                    onClick={() => setCountryFilter(f)}
+                    className={cn(
+                      "px-3 py-1 rounded-md text-xs font-medium transition-colors",
+                      countryFilter === f
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {f === "all" ? "All" : f}
+                  </button>
+                ))}
+              </div>
+            )}
             <Button
               variant="outline"
               size="sm"

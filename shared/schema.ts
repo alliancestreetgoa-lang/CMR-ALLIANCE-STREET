@@ -115,6 +115,7 @@ export const notifications = pgTable("notifications", {
   message: text("message").notNull(),
   type: text("type").notNull().default("info"), // "task_assigned", "deadline_warning", "overdue", "info"
   relatedTaskId: integer("related_task_id"),
+  country: text("country"), // "UK", "UAE", or null for system-wide
   status: notificationStatusEnum("status").notNull().default("unread"),
   createdAt: timestamp("created_at").defaultNow(),
 });

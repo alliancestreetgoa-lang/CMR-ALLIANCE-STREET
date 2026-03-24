@@ -269,6 +269,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               title: `Reminder: ${info.clientName}`,
               message: `Tomorrow (${data.tomorrowDay}): ${info.tasks.join(", ")}`,
               type: "reminder",
+              country: "UK",
             });
           }
         }
@@ -287,6 +288,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               title: `Reminder: ${info.clientName}`,
               message: `Due tomorrow (${dateData.tomorrowLabel}): ${info.labels.join(", ")}`,
               type: "reminder",
+              country: "UK",
             });
           }
         }
