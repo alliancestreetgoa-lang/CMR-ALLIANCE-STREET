@@ -374,7 +374,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const menuItems = [
     { title: "Dashboard", icon: LayoutDashboard, path: "/" },
-    { title: "Terminal View", icon: Terminal, path: "/terminal" },
+    ...(user?.role === "super_admin"
+      ? [{ title: "Terminal View", icon: Terminal, path: "/terminal" }]
+      : []),
     { title: "Clients", icon: Users, path: "/clients" },
     ...(user?.role === "super_admin" || user?.role === "admin"
       ? [{ title: "Compliance (VAT/CT)", icon: FileText, path: "/compliance" }]
