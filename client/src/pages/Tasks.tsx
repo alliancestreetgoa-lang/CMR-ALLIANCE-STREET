@@ -704,14 +704,14 @@ export default function Tasks() {
                   </tr>
                 </thead>
                 <tbody>
-                  {tasks.length === 0 ? (
+                  {filteredTasks.length === 0 ? (
                     <tr>
                       <td colSpan={isSuperAdmin ? 7 : 6} className="text-center text-muted-foreground py-10">
                         No tasks found.
                       </td>
                     </tr>
                   ) : (
-                    tasks.map((task) => (
+                    filteredTasks.map((task) => (
                       <tr
                         key={task.id}
                         className="border-b border-border/30 hover:bg-secondary/10 transition-colors group"
