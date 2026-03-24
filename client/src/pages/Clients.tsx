@@ -407,17 +407,17 @@ export default function Clients() {
       vatQuarterlyDraft2Date: client.vatQuarterlyDraft2Date || "",
       vatQuarterlySubmitDate: client.vatQuarterlySubmitDate || "",
       status: client.status || "Active",
-      vatQ1Start: "",
-      vatQ1End: "",
+      vatQ1Start: clientVatRecords.find(r => r.vatQuarter === "Q1")?.vatPeriodStart || "",
+      vatQ1End: clientVatRecords.find(r => r.vatQuarter === "Q1")?.vatPeriodEnd || "",
       vatQ1Active: getVatActive("Q1"),
-      vatQ2Start: "",
-      vatQ2End: "",
+      vatQ2Start: clientVatRecords.find(r => r.vatQuarter === "Q2")?.vatPeriodStart || "",
+      vatQ2End: clientVatRecords.find(r => r.vatQuarter === "Q2")?.vatPeriodEnd || "",
       vatQ2Active: getVatActive("Q2"),
-      vatQ3Start: "",
-      vatQ3End: "",
+      vatQ3Start: clientVatRecords.find(r => r.vatQuarter === "Q3")?.vatPeriodStart || "",
+      vatQ3End: clientVatRecords.find(r => r.vatQuarter === "Q3")?.vatPeriodEnd || "",
       vatQ3Active: getVatActive("Q3"),
-      vatQ4Start: "",
-      vatQ4End: "",
+      vatQ4Start: clientVatRecords.find(r => r.vatQuarter === "Q4")?.vatPeriodStart || "",
+      vatQ4End: clientVatRecords.find(r => r.vatQuarter === "Q4")?.vatPeriodEnd || "",
       vatQ4Active: getVatActive("Q4"),
     });
     if (client.country === "UK") {
@@ -466,10 +466,20 @@ export default function Clients() {
       const clientVatRecords = vatRecords.filter(r => r.clientId === editingClient.id);
       for (const q of ["Q1", "Q2", "Q3", "Q4"] as const) {
         const activeKey = `vat${q}Active` as keyof typeof editFormData;
+        const startKey = `vat${q}Start` as keyof typeof editFormData;
+        const endKey = `vat${q}End` as keyof typeof editFormData;
         const isActive = editFormData[activeKey] ? "true" : "false";
         const record = clientVatRecords.find(r => r.vatQuarter === q);
-        if (record && record.isActive !== isActive) {
-          await api.patch(`/api/vat-records/${record.id}`, { isActive });
+        if (record) {
+          const updates: Record<string, string | null> = {};
+          if (record.isActive !== isActive) updates.isActive = isActive;
+          const newStart = (editFormData[startKey] as string) || null;
+          const newEnd = (editFormData[endKey] as string) || null;
+          if (record.vatPeriodStart !== newStart) updates.vatPeriodStart = newStart;
+          if (record.vatPeriodEnd !== newEnd) updates.vatPeriodEnd = newEnd;
+          if (Object.keys(updates).length > 0) {
+            await api.patch(`/api/vat-records/${record.id}`, updates);
+          }
         }
       }
 
@@ -1084,20 +1094,38 @@ export default function Clients() {
             </div>
 
             <div className="border-t pt-4 mt-2">
-              <Label className="text-sm font-semibold">VAT Quarter Status</Label>
+              <Label className="text-sm font-semibold">VAT Periods</Label>
               <div className="grid gap-2 mt-3">
                 {(["Q1", "Q2", "Q3", "Q4"] as const).map((q) => {
                   const activeKey = `vat${q}Active` as keyof typeof editFormData;
+                  const startKey = `vat${q}Start` as keyof typeof editFormData;
+                  const endKey = `vat${q}End` as keyof typeof editFormData;
                   const isActive = editFormData[activeKey] as boolean;
                   return (
-                    <div key={q} className="flex items-center justify-between">
-                      <Label className="text-sm text-muted-foreground">{q}</Label>
+                    <div key={q} className="flex items-center gap-2">
+                      <Label className="text-sm text-muted-foreground w-6 shrink-0">{q}</Label>
+                      <Input
+                        data-testid={`input-edit-vat-${q.toLowerCase()}-start`}
+                        type="date"
+                        placeholder="Start"
+                        value={editFormData[startKey] as string}
+                        onChange={e => setEditFormData({ ...editFormData, [startKey]: e.target.value })}
+                        className="flex-1 text-sm"
+                      />
+                      <Input
+                        data-testid={`input-edit-vat-${q.toLowerCase()}-end`}
+                        type="date"
+                        placeholder="End"
+                        value={editFormData[endKey] as string}
+                        onChange={e => setEditFormData({ ...editFormData, [endKey]: e.target.value })}
+                        className="flex-1 text-sm"
+                      />
                       <Button
                         type="button"
                         size="sm"
                         variant={isActive ? "default" : "outline"}
                         data-testid={`toggle-edit-vat-${q.toLowerCase()}-active`}
-                        className={`text-xs min-w-[80px] ${isActive ? "bg-green-600 hover:bg-green-700 text-white" : "text-muted-foreground border-dashed"}`}
+                        className={`text-xs min-w-[80px] shrink-0 ${isActive ? "bg-green-600 hover:bg-green-700 text-white" : "text-muted-foreground border-dashed"}`}
                         onClick={() => setEditFormData({ ...editFormData, [activeKey]: !isActive })}
                       >
                         {isActive ? "Active" : "Inactive"}
