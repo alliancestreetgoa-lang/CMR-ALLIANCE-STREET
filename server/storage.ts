@@ -182,6 +182,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTask(id: number, task: Partial<InsertTask>) {
+    if (task.status) {
+      await db.execute(sql`UPDATE tasks SET status = ${task.status}::task_status WHERE id = ${id}`);
+      const rest = { ...task };
+      delete rest.status;
+      if (Object.keys(rest).length > 0) {
+        await db.update(tasks).set(rest).where(eq(tasks.id, id));
+      }
+      const [result] = await db.select().from(tasks).where(eq(tasks.id, id));
+      return result;
+    }
     const [updated] = await db.update(tasks).set(task).where(eq(tasks.id, id)).returning();
     return updated;
   }
