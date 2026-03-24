@@ -13,6 +13,7 @@ import Chat from "@/pages/Chat";
 import Notifications from "@/pages/Notifications";
 import ActivityLog from "@/pages/ActivityLog";
 import HRManagement from "@/pages/HRManagement";
+import TerminalDashboard from "@/pages/TerminalDashboard";
 import Login from "@/pages/Login";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
@@ -65,6 +66,7 @@ function Router() {
       <Route path="/users">{() => <ProtectedRoute component={UsersPage} />}</Route>
       <Route path="/activity">{() => <ProtectedRoute component={ActivityLog} />}</Route>
       <Route path="/hr">{() => <ProtectedRoute component={HRManagement} />}</Route>
+      <Route path="/terminal">{() => <ProtectedRoute component={TerminalDashboard} />}</Route>
       <Route component={NotFound} />
     </Switch>
   );
