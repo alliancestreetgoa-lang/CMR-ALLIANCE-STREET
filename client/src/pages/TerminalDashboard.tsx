@@ -117,7 +117,9 @@ export default function TerminalDashboard() {
   const clientMap = Object.fromEntries(clients.map((c) => [c.id, c.companyName]));
   const userMap = Object.fromEntries(users.map((u) => [u.id, u.name]));
 
-  const activeTasks = tasks.slice(0, 20);
+  const activeTasks = tasks
+    .filter((t) => t.status !== "Completed" && t.status !== "Done")
+    .slice(0, 20);
 
   const recentLogs = [...auditLogs]
     .sort((a, b) => new Date(b.timestamp ?? 0).getTime() - new Date(a.timestamp ?? 0).getTime())
