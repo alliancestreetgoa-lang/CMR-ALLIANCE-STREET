@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, and, desc, asc, or, sql } from "drizzle-orm";
 import {
   users, clients, vatRecords, tasks, auditLogs, notifications, directMessages,
@@ -183,7 +183,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateTask(id: number, task: Partial<InsertTask>) {
     if (task.status) {
-      await db.execute(sql`UPDATE tasks SET status = ${task.status}::task_status WHERE id = ${id}`);
+      await pool.query('UPDATE tasks SET status = $1::task_status WHERE id = $2', [task.status, id]);
       const rest = { ...task };
       delete rest.status;
       if (Object.keys(rest).length > 0) {
