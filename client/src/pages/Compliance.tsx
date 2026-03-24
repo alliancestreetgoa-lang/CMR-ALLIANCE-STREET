@@ -361,7 +361,7 @@ export default function Compliance() {
                     <div>
                       <p className="text-sm text-muted-foreground">Overdue / At Risk</p>
                       <p className="text-2xl font-bold mt-1" data-testid="text-at-risk">{vatOverdue + ctOverdue}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{dueWithin7Days} due within 7 days</p>
+                      <p className="text-xs text-destructive font-medium mt-1">{vatOverdue + ctOverdue} overdue</p>
                     </div>
                     <div className="h-9 w-9 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
                       <AlertTriangle className="h-5 w-5 text-destructive" />
