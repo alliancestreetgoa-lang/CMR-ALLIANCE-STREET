@@ -144,6 +144,74 @@ async function checkDeadlines(): Promise<number> {
   return count;
 }
 
+// Weekly schedule reminder windows: day-before at 19:00 & 20:00; on-day at 11:30 & 12:30
+const WEEKLY_REMINDER_WINDOWS = [
+  { hour: 19, minute: 0,  type: "day_before" as const },
+  { hour: 20, minute: 0,  type: "day_before" as const },
+  { hour: 11, minute: 30, type: "on_day"    as const },
+  { hour: 12, minute: 30, type: "on_day"    as const },
+];
+
+async function checkWeeklyScheduleReminders(): Promise<void> {
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+
+  const window = WEEKLY_REMINDER_WINDOWS.find(w => w.hour === h && w.minute === m);
+  if (!window) return;
+
+  const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  // For day_before: look at tomorrow's schedule; for on_day: look at today's
+  const target = new Date(now);
+  if (window.type === "day_before") target.setDate(target.getDate() + 1);
+  const targetDay = DAYS[target.getDay()];
+
+  const allSchedules = await storage.getUkSchedulesForAllClients();
+  const allClients   = await storage.getClients();
+  const allUsers     = await storage.getUsers();
+  const admins       = allUsers.filter(u => u.role === "admin" || u.role === "super_admin");
+
+  // Dedup: skip if we already sent the same reminder in the last 30 minutes
+  const thirtyMinsAgo = new Date(now.getTime() - 30 * 60 * 1000);
+
+  for (const sched of allSchedules) {
+    const days = sched.days.split(",").map((d: string) => d.trim()).filter(Boolean);
+    if (!days.includes(targetDay)) continue;
+
+    const client = allClients.find(c => c.id === sched.clientId);
+    if (!client || client.status !== "Active") continue;
+
+    const reminderLabel = window.type === "day_before"
+      ? `Reminder (tomorrow – ${targetDay}): ${sched.taskName} for ${client.companyName}`
+      : `Reminder (today – ${targetDay}): ${sched.taskName} for ${client.companyName}`;
+
+    for (const admin of admins) {
+      // Dedup check
+      const recentDup = await db
+        .select()
+        .from(notifications)
+        .where(and(
+          eq(notifications.userId, admin.id),
+          eq(notifications.type, "weekly_schedule_reminder"),
+          eq(notifications.message, reminderLabel),
+          gte(notifications.createdAt, thirtyMinsAgo)
+        ));
+      if (recentDup.length > 0) continue;
+
+      const notif = await storage.createNotification({
+        userId: admin.id,
+        title: window.type === "day_before" ? "Weekly Schedule – Tomorrow" : "Weekly Schedule – Today",
+        message: reminderLabel,
+        type: "weekly_schedule_reminder",
+        relatedTaskId: null,
+        status: "unread",
+      });
+      notifyUser(admin.id, { type: "new_notification", notification: notif });
+    }
+  }
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -1364,6 +1432,15 @@ Consider:
       console.error("Deadline check error:", err);
     }
   }, 3600000);
+
+  // Check weekly schedule reminders every minute so we hit 19:00, 20:00, 11:30, 12:30 exactly
+  setInterval(async () => {
+    try {
+      await checkWeeklyScheduleReminders();
+    } catch (err) {
+      console.error("Weekly schedule reminder error:", err);
+    }
+  }, 60000);
 
   return httpServer;
 }
