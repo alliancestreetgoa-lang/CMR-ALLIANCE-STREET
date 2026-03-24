@@ -152,6 +152,10 @@ const emptyForm = {
   plMonthlyDate: "",
   plQuarterly: "false",
   plQuarterlyDate: "",
+  vatQuarterlyUk: "false",
+  vatQuarterlyDraft1Date: "",
+  vatQuarterlyDraft2Date: "",
+  vatQuarterlySubmitDate: "",
   status: "Active",
   vatQ1Start: "",
   vatQ1End: "",
@@ -347,6 +351,10 @@ export default function Clients() {
         plMonthlyDate: formData.country === "UK" && formData.plMonthly === "true" ? formData.plMonthlyDate || null : null,
         plQuarterly: formData.country === "UK" ? formData.plQuarterly : "false",
         plQuarterlyDate: formData.country === "UK" && formData.plQuarterly === "true" ? formData.plQuarterlyDate || null : null,
+        vatQuarterlyUk: formData.country === "UK" ? formData.vatQuarterlyUk : "false",
+        vatQuarterlyDraft1Date: formData.country === "UK" && formData.vatQuarterlyUk === "true" ? formData.vatQuarterlyDraft1Date || null : null,
+        vatQuarterlyDraft2Date: formData.country === "UK" && formData.vatQuarterlyUk === "true" ? formData.vatQuarterlyDraft2Date || null : null,
+        vatQuarterlySubmitDate: formData.country === "UK" && formData.vatQuarterlyUk === "true" ? formData.vatQuarterlySubmitDate || null : null,
         status: "Active",
         vatPeriods: {
           Q1: { start: formData.vatQ1Start || null, end: formData.vatQ1End || null, isActive: formData.vatQ1Active ? "true" : "false" },
@@ -394,6 +402,10 @@ export default function Clients() {
       plMonthlyDate: client.plMonthlyDate || "",
       plQuarterly: client.plQuarterly || "false",
       plQuarterlyDate: client.plQuarterlyDate || "",
+      vatQuarterlyUk: client.vatQuarterlyUk || "false",
+      vatQuarterlyDraft1Date: client.vatQuarterlyDraft1Date || "",
+      vatQuarterlyDraft2Date: client.vatQuarterlyDraft2Date || "",
+      vatQuarterlySubmitDate: client.vatQuarterlySubmitDate || "",
       status: client.status || "Active",
       vatQ1Start: "",
       vatQ1End: "",
@@ -444,6 +456,10 @@ export default function Clients() {
         plMonthlyDate: editFormData.country === "UK" && editFormData.plMonthly === "true" ? editFormData.plMonthlyDate || null : null,
         plQuarterly: editFormData.country === "UK" ? editFormData.plQuarterly : "false",
         plQuarterlyDate: editFormData.country === "UK" && editFormData.plQuarterly === "true" ? editFormData.plQuarterlyDate || null : null,
+        vatQuarterlyUk: editFormData.country === "UK" ? editFormData.vatQuarterlyUk : "false",
+        vatQuarterlyDraft1Date: editFormData.country === "UK" && editFormData.vatQuarterlyUk === "true" ? editFormData.vatQuarterlyDraft1Date || null : null,
+        vatQuarterlyDraft2Date: editFormData.country === "UK" && editFormData.vatQuarterlyUk === "true" ? editFormData.vatQuarterlyDraft2Date || null : null,
+        vatQuarterlySubmitDate: editFormData.country === "UK" && editFormData.vatQuarterlyUk === "true" ? editFormData.vatQuarterlySubmitDate || null : null,
         status: editFormData.status,
       });
 
@@ -614,6 +630,45 @@ export default function Clients() {
 
                   {formData.country === "UK" && (
                     <div className="border-t pt-4 mt-2 space-y-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Label className="text-sm font-semibold">VAT (Quarterly)</Label>
+                          <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">UK only</span>
+                        </div>
+                        <div className="space-y-2">
+                          <button
+                            type="button"
+                            data-testid="toggle-vat-quarterly-uk"
+                            onClick={() => setFormData(f => ({ ...f, vatQuarterlyUk: f.vatQuarterlyUk === "true" ? "false" : "true" }))}
+                            className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
+                              formData.vatQuarterlyUk === "true"
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-background text-muted-foreground border-border hover:bg-muted"
+                            }`}
+                          >
+                            VAT (Quarterly)
+                          </button>
+                          {formData.vatQuarterlyUk === "true" && (
+                            <div className="mt-3 space-y-2 pl-1">
+                              {(["Draft 1", "Draft 2", "Submit"] as const).map((label) => {
+                                const key = label === "Draft 1" ? "vatQuarterlyDraft1Date" : label === "Draft 2" ? "vatQuarterlyDraft2Date" : "vatQuarterlySubmitDate";
+                                return (
+                                  <div key={label} className="flex items-center gap-3">
+                                    <span className="text-sm text-muted-foreground w-16 shrink-0">{label}</span>
+                                    <Input
+                                      type="date"
+                                      data-testid={`input-vat-quarterly-${label.toLowerCase().replace(" ", "")}-date`}
+                                      value={formData[key as keyof typeof formData] as string}
+                                      onChange={e => setFormData(f => ({ ...f, [key]: e.target.value }))}
+                                      className="w-44 h-9 text-sm"
+                                    />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                       <div>
                         <div className="flex items-center gap-2 mb-3">
                           <Label className="text-sm font-semibold">P&amp;L Reporting</Label>
@@ -1055,6 +1110,45 @@ export default function Clients() {
 
             {editFormData.country === "UK" && (
               <div className="border-t pt-4 mt-2 space-y-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Label className="text-sm font-semibold">VAT (Quarterly)</Label>
+                    <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">UK only</span>
+                  </div>
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      data-testid="edit-toggle-vat-quarterly-uk"
+                      onClick={() => setEditFormData(f => ({ ...f, vatQuarterlyUk: f.vatQuarterlyUk === "true" ? "false" : "true" }))}
+                      className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
+                        editFormData.vatQuarterlyUk === "true"
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background text-muted-foreground border-border hover:bg-muted"
+                      }`}
+                    >
+                      VAT (Quarterly)
+                    </button>
+                    {editFormData.vatQuarterlyUk === "true" && (
+                      <div className="mt-3 space-y-2 pl-1">
+                        {(["Draft 1", "Draft 2", "Submit"] as const).map((label) => {
+                          const key = label === "Draft 1" ? "vatQuarterlyDraft1Date" : label === "Draft 2" ? "vatQuarterlyDraft2Date" : "vatQuarterlySubmitDate";
+                          return (
+                            <div key={label} className="flex items-center gap-3">
+                              <span className="text-sm text-muted-foreground w-16 shrink-0">{label}</span>
+                              <Input
+                                type="date"
+                                data-testid={`edit-input-vat-quarterly-${label.toLowerCase().replace(" ", "")}-date`}
+                                value={editFormData[key as keyof typeof editFormData] as string}
+                                onChange={e => setEditFormData(f => ({ ...f, [key]: e.target.value }))}
+                                className="w-44 h-9 text-sm"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <Label className="text-sm font-semibold">P&amp;L Reporting</Label>

@@ -41,10 +41,14 @@ export const clients = pgTable("clients", {
   corporateTaxEndMonth: text("corporate_tax_end_month"),
   corporateTaxDueDate: text("corporate_tax_due_date"),
   corporateTaxStatus: text("corporate_tax_status").default("Not Started"),
-  plMonthly: text("pl_monthly").default("false"),       // UK only — P&L Monthly
-  plMonthlyDate: text("pl_monthly_date"),               // UK only — P&L Monthly due date
-  plQuarterly: text("pl_quarterly").default("false"),   // UK only — P&L Quarterly
-  plQuarterlyDate: text("pl_quarterly_date"),           // UK only — P&L Quarterly due date
+  plMonthly: text("pl_monthly").default("false"),             // UK only — P&L Monthly
+  plMonthlyDate: text("pl_monthly_date"),                     // UK only — P&L Monthly due date
+  plQuarterly: text("pl_quarterly").default("false"),         // UK only — P&L Quarterly
+  plQuarterlyDate: text("pl_quarterly_date"),                 // UK only — P&L Quarterly due date
+  vatQuarterlyUk: text("vat_quarterly_uk").default("false"),  // UK only — VAT Quarterly toggle
+  vatQuarterlyDraft1Date: text("vat_quarterly_draft1_date"),  // UK only — VAT Q Draft 1 date
+  vatQuarterlyDraft2Date: text("vat_quarterly_draft2_date"),  // UK only — VAT Q Draft 2 date
+  vatQuarterlySubmitDate: text("vat_quarterly_submit_date"),  // UK only — VAT Q Submit date
   status: text("status").notNull().default("Active"), // Active, Inactive, Pending
   createdAt: timestamp("created_at").defaultNow(),
 });
