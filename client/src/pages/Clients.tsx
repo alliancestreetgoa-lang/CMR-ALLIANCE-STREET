@@ -148,6 +148,8 @@ const emptyForm = {
   corporateTaxStartMonth: "",
   corporateTaxEndMonth: "",
   corporateTaxDueDate: "",
+  plMonthly: "false",
+  plQuarterly: "false",
   status: "Active",
   vatQ1Start: "",
   vatQ1End: "",
@@ -339,6 +341,8 @@ export default function Clients() {
         corporateTaxStartMonth: formData.corporateTaxStartMonth || null,
         corporateTaxEndMonth: formData.corporateTaxEndMonth || null,
         corporateTaxDueDate: formData.corporateTaxDueDate || null,
+        plMonthly: formData.country === "UK" ? formData.plMonthly : "false",
+        plQuarterly: formData.country === "UK" ? formData.plQuarterly : "false",
         status: "Active",
         vatPeriods: {
           Q1: { start: formData.vatQ1Start || null, end: formData.vatQ1End || null, isActive: formData.vatQ1Active ? "true" : "false" },
@@ -382,6 +386,8 @@ export default function Clients() {
       corporateTaxStartMonth: client.corporateTaxStartMonth || "",
       corporateTaxEndMonth: client.corporateTaxEndMonth || "",
       corporateTaxDueDate: client.corporateTaxDueDate || "",
+      plMonthly: client.plMonthly || "false",
+      plQuarterly: client.plQuarterly || "false",
       status: client.status || "Active",
       vatQ1Start: "",
       vatQ1End: "",
@@ -428,6 +434,8 @@ export default function Clients() {
         corporateTaxStartMonth: editFormData.corporateTaxStartMonth || null,
         corporateTaxEndMonth: editFormData.corporateTaxEndMonth || null,
         corporateTaxDueDate: editFormData.corporateTaxDueDate || null,
+        plMonthly: editFormData.country === "UK" ? editFormData.plMonthly : "false",
+        plQuarterly: editFormData.country === "UK" ? editFormData.plQuarterly : "false",
         status: editFormData.status,
       });
 
@@ -597,12 +605,46 @@ export default function Clients() {
                   </div>
 
                   {formData.country === "UK" && (
-                    <div className="border-t pt-4 mt-2">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Label className="text-sm font-semibold">Weekly Schedule</Label>
-                        <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">UK only — reminder sent day before</span>
+                    <div className="border-t pt-4 mt-2 space-y-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Label className="text-sm font-semibold">P&amp;L Reporting</Label>
+                          <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">UK only</span>
+                        </div>
+                        <div className="flex gap-3">
+                          <button
+                            type="button"
+                            data-testid="toggle-pl-monthly"
+                            onClick={() => setFormData(f => ({ ...f, plMonthly: f.plMonthly === "true" ? "false" : "true" }))}
+                            className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
+                              formData.plMonthly === "true"
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-background text-muted-foreground border-border hover:bg-muted"
+                            }`}
+                          >
+                            P&amp;L Monthly
+                          </button>
+                          <button
+                            type="button"
+                            data-testid="toggle-pl-quarterly"
+                            onClick={() => setFormData(f => ({ ...f, plQuarterly: f.plQuarterly === "true" ? "false" : "true" }))}
+                            className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
+                              formData.plQuarterly === "true"
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-background text-muted-foreground border-border hover:bg-muted"
+                            }`}
+                          >
+                            P&amp;L Quarterly
+                          </button>
+                        </div>
                       </div>
-                      <UkScheduleBuilder schedule={addSchedule} onChange={setAddSchedule} />
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Label className="text-sm font-semibold">Weekly Schedule</Label>
+                          <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">UK only — reminder sent day before</span>
+                        </div>
+                        <UkScheduleBuilder schedule={addSchedule} onChange={setAddSchedule} />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -982,12 +1024,46 @@ export default function Clients() {
             </div>
 
             {editFormData.country === "UK" && (
-              <div className="border-t pt-4 mt-2">
-                <div className="flex items-center gap-2 mb-3">
-                  <Label className="text-sm font-semibold">Weekly Schedule</Label>
-                  <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">UK only — reminder sent day before</span>
+              <div className="border-t pt-4 mt-2 space-y-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Label className="text-sm font-semibold">P&amp;L Reporting</Label>
+                    <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">UK only</span>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      data-testid="edit-toggle-pl-monthly"
+                      onClick={() => setEditFormData(f => ({ ...f, plMonthly: f.plMonthly === "true" ? "false" : "true" }))}
+                      className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
+                        editFormData.plMonthly === "true"
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background text-muted-foreground border-border hover:bg-muted"
+                      }`}
+                    >
+                      P&amp;L Monthly
+                    </button>
+                    <button
+                      type="button"
+                      data-testid="edit-toggle-pl-quarterly"
+                      onClick={() => setEditFormData(f => ({ ...f, plQuarterly: f.plQuarterly === "true" ? "false" : "true" }))}
+                      className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
+                        editFormData.plQuarterly === "true"
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background text-muted-foreground border-border hover:bg-muted"
+                      }`}
+                    >
+                      P&amp;L Quarterly
+                    </button>
+                  </div>
                 </div>
-                <UkScheduleBuilder schedule={editSchedule} onChange={setEditSchedule} />
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Label className="text-sm font-semibold">Weekly Schedule</Label>
+                    <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">UK only — reminder sent day before</span>
+                  </div>
+                  <UkScheduleBuilder schedule={editSchedule} onChange={setEditSchedule} />
+                </div>
               </div>
             )}
           </div>

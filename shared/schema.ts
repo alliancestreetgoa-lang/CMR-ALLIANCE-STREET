@@ -41,6 +41,8 @@ export const clients = pgTable("clients", {
   corporateTaxEndMonth: text("corporate_tax_end_month"),
   corporateTaxDueDate: text("corporate_tax_due_date"),
   corporateTaxStatus: text("corporate_tax_status").default("Not Started"),
+  plMonthly: text("pl_monthly").default("false"),   // UK only — P&L Monthly
+  plQuarterly: text("pl_quarterly").default("false"), // UK only — P&L Quarterly
   status: text("status").notNull().default("Active"), // Active, Inactive, Pending
   createdAt: timestamp("created_at").defaultNow(),
 });
