@@ -11,6 +11,7 @@ export type AuthUser = {
   name: string;
   email: string;
   role: UserRole;
+  allowedCountries: string | null;
   createdAt: string;
 };
 

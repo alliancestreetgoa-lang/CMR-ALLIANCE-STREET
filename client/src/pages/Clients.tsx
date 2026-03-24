@@ -167,8 +167,17 @@ export default function Clients() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [countryFilter, setCountryFilter] = useState<"ALL" | "UK" | "UAE">("ALL");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "Active" | "Inactive">("Active");
+
+  // Derive which country options this user is allowed to filter by
+  const allowedCountrySet: ("UK" | "UAE")[] = (() => {
+    if (!user || user.role === "super_admin" || !user.allowedCountries) return ["UK", "UAE"];
+    return user.allowedCountries.split(",").map(c => c.trim()).filter((c): c is "UK" | "UAE" => c === "UK" || c === "UAE");
+  })();
+  const showCountryFilter = allowedCountrySet.length > 1;
+  const [countryFilter, setCountryFilter] = useState<"ALL" | "UK" | "UAE">(() =>
+    allowedCountrySet.length === 1 ? allowedCountrySet[0] : "ALL"
+  );
 
   const [clients, setClients] = useState<Client[]>([]);
   const [vatRecords, setVatRecords] = useState<VatRecord[]>([]);
@@ -191,6 +200,13 @@ export default function Clients() {
 
   const [addSchedule, setAddSchedule] = useState<ScheduleItem[]>(freshSchedule());
   const [editSchedule, setEditSchedule] = useState<ScheduleItem[]>(freshSchedule());
+
+  // When Add dialog opens, default country to user's only allowed country
+  useEffect(() => {
+    if (dialogOpen && allowedCountrySet.length === 1) {
+      setFormData(f => ({ ...f, country: allowedCountrySet[0] }));
+    }
+  }, [dialogOpen]);
 
   const fetchData = async () => {
     try {
@@ -581,35 +597,41 @@ export default function Clients() {
                  />
                </div>
                <div className="flex items-center gap-2 w-full sm:w-auto">
-                 <div className="flex items-center border rounded-md bg-background p-1">
-                    <Button 
-                      data-testid="button-filter-all"
-                      variant={countryFilter === "ALL" ? "secondary" : "ghost"} 
-                      size="sm" 
-                      onClick={() => setCountryFilter("ALL")}
-                      className="h-7 text-xs"
-                    >
-                      All
-                    </Button>
-                    <Button 
-                      data-testid="button-filter-uk"
-                      variant={countryFilter === "UK" ? "secondary" : "ghost"} 
-                      size="sm" 
-                      onClick={() => setCountryFilter("UK")}
-                      className="h-7 text-xs"
-                    >
-                      UK
-                    </Button>
-                    <Button 
-                      data-testid="button-filter-uae"
-                      variant={countryFilter === "UAE" ? "secondary" : "ghost"} 
-                      size="sm" 
-                      onClick={() => setCountryFilter("UAE")}
-                      className="h-7 text-xs"
-                    >
-                      UAE
-                    </Button>
-                 </div>
+                 {showCountryFilter && (
+                   <div className="flex items-center border rounded-md bg-background p-1">
+                     <Button
+                       data-testid="button-filter-all"
+                       variant={countryFilter === "ALL" ? "secondary" : "ghost"}
+                       size="sm"
+                       onClick={() => setCountryFilter("ALL")}
+                       className="h-7 text-xs"
+                     >
+                       All
+                     </Button>
+                     {allowedCountrySet.includes("UK") && (
+                       <Button
+                         data-testid="button-filter-uk"
+                         variant={countryFilter === "UK" ? "secondary" : "ghost"}
+                         size="sm"
+                         onClick={() => setCountryFilter("UK")}
+                         className="h-7 text-xs"
+                       >
+                         UK
+                       </Button>
+                     )}
+                     {allowedCountrySet.includes("UAE") && (
+                       <Button
+                         data-testid="button-filter-uae"
+                         variant={countryFilter === "UAE" ? "secondary" : "ghost"}
+                         size="sm"
+                         onClick={() => setCountryFilter("UAE")}
+                         className="h-7 text-xs"
+                       >
+                         UAE
+                       </Button>
+                     )}
+                   </div>
+                 )}
                  {canManageClients && (
                  <div className="flex items-center border rounded-md bg-background p-1">
                    <Button 
