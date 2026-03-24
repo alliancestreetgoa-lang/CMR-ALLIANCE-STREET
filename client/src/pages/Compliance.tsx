@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api } from "@/lib/api";
 import { useState, useEffect } from "react";
-import { useSearch } from "wouter";
+import { useSearch, useLocation } from "wouter";
 import { 
   Card, 
   CardContent, 
@@ -75,6 +75,7 @@ export default function Compliance() {
   const { toast } = useToast();
   const { user } = useAuth();
   const search = useSearch();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     const params = new URLSearchParams(search);
@@ -336,7 +337,11 @@ export default function Compliance() {
 
             {/* Top stat cards */}
             <div className="grid gap-4 md:grid-cols-4">
-              <Card data-testid="card-total-clients">
+              <Card
+                data-testid="card-total-clients"
+                className="cursor-pointer transition-all hover:shadow-md hover:border-primary/40"
+                onClick={() => setLocation("/clients")}
+              >
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between">
                     <div>
@@ -351,7 +356,11 @@ export default function Compliance() {
                 </CardContent>
               </Card>
 
-              <Card data-testid="card-vat-rate">
+              <Card
+                data-testid="card-vat-rate"
+                className="cursor-pointer transition-all hover:shadow-md hover:border-green-400/60"
+                onClick={() => { setViewMode("schedule"); setVatFilter("open"); }}
+              >
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between">
                     <div>
@@ -366,7 +375,11 @@ export default function Compliance() {
                 </CardContent>
               </Card>
 
-              <Card data-testid="card-ct-rate">
+              <Card
+                data-testid="card-ct-rate"
+                className="cursor-pointer transition-all hover:shadow-md hover:border-blue-400/60"
+                onClick={() => { setViewMode("schedule"); setCtFilter("open"); }}
+              >
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between">
                     <div>
