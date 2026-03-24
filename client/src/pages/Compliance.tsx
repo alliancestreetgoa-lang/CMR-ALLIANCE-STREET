@@ -11,7 +11,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, FileText, CheckCircle2, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, FileText, Loader2 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import type { VatRecord, Client } from "@shared/schema";
 
+const vatStatuses = ["Not Started", "In Progress", "Filed", "Completed", "Overdue"] as const;
 const ctStatuses = ["Not Started", "In Progress", "Filed", "Completed", "Overdue"] as const;
 type CountryFilter = "all" | "UK" | "UAE";
 
@@ -70,6 +71,18 @@ export default function Compliance() {
   const getClientName = (clientId: number) => {
     const client = clients.find((c) => c.id === clientId);
     return client?.companyName ?? "Unknown Client";
+  };
+
+  const handleVatStatusChange = async (recordId: number, newStatus: string) => {
+    try {
+      await api.patch(`/api/vat-records/${recordId}`, { status: newStatus });
+      setVatRecords((prev) =>
+        prev.map((r) => (r.id === recordId ? { ...r, status: newStatus } : r))
+      );
+      toast({ title: "VAT status updated" });
+    } catch (err: any) {
+      toast({ title: "Error updating VAT status", description: err.message, variant: "destructive" });
+    }
   };
 
   const handleCtStatusChange = async (clientId: number, newStatus: string) => {
@@ -253,11 +266,30 @@ export default function Compliance() {
                              </div>
                            </div>
                            
-                           <StatusBadge status={record.status} className="px-3 py-1" />
-                           
-                           <Button variant="ghost" size="icon" data-testid={`button-complete-${record.id}`}>
-                             <CheckCircle2 className="h-5 w-5 text-muted-foreground hover:text-success" />
-                           </Button>
+                           <DropdownMenu>
+                             <DropdownMenuTrigger asChild>
+                               <button className="cursor-pointer" data-testid={`button-vat-status-${record.id}`}>
+                                 <StatusBadge
+                                   status={record.status}
+                                   className="px-3 py-1"
+                                 />
+                               </button>
+                             </DropdownMenuTrigger>
+                             <DropdownMenuContent align="end">
+                               <DropdownMenuLabel className="text-xs">Change Status</DropdownMenuLabel>
+                               <DropdownMenuSeparator />
+                               {vatStatuses.map((s) => (
+                                 <DropdownMenuItem
+                                   key={s}
+                                   className={cn("text-xs", s === record.status && "font-bold bg-muted")}
+                                   onClick={() => handleVatStatusChange(record.id, s)}
+                                   data-testid={`vat-option-${s}-${record.id}`}
+                                 >
+                                   {s}
+                                 </DropdownMenuItem>
+                               ))}
+                             </DropdownMenuContent>
+                           </DropdownMenu>
                         </div>
                       </div>
                     );
