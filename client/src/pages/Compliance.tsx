@@ -1,6 +1,7 @@
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api } from "@/lib/api";
 import { useState, useEffect } from "react";
+import { useSearch } from "wouter";
 import { 
   Card, 
   CardContent, 
@@ -73,6 +74,17 @@ export default function Compliance() {
   const [ctFilter, setCtFilter] = useState<"all" | "open" | "filed" | "overdue">("all");
   const { toast } = useToast();
   const { user } = useAuth();
+  const search = useSearch();
+
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    const filter = params.get("filter");
+    if (filter === "overdue") {
+      setViewMode("schedule");
+      setVatFilter("overdue");
+      setCtFilter("overdue");
+    }
+  }, [search]);
 
   useEffect(() => {
     Promise.all([

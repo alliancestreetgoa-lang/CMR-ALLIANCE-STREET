@@ -3,7 +3,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
-import { Users, AlertTriangle, CheckCircle, CheckCheck, Clock, Calendar, ArrowUpRight, Loader2, ListTodo, FileCheck, ClipboardList, TrendingUp, BarChart3, Target } from "lucide-react";
+import { Users, AlertTriangle, CheckCircle, CheckCheck, Clock, Calendar, ArrowUpRight, Loader2, ListTodo, FileCheck, ClipboardList, TrendingUp, BarChart3, Target, FileText, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -81,6 +81,33 @@ interface Notification {
   createdAt: string;
 }
 
+interface VatRecord {
+  id: number;
+  clientId: number;
+  vatDueDate: string | null;
+  vatQuarter: string;
+  status: string;
+}
+
+interface ComplianceClient {
+  id: number;
+  companyName: string;
+  corporateTaxDueDate: string | null;
+  corporateTaxStatus: string | null;
+  corporateTaxStartMonth: string | null;
+  corporateTaxEndMonth: string | null;
+}
+
+interface ComplianceDeadline {
+  id: string;
+  name: string;
+  label: string;
+  dueDate: string;
+  status: string;
+  type: "vat" | "ct" | "task";
+  daysLeft: number;
+}
+
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
@@ -119,6 +146,8 @@ export default function Dashboard() {
   const [clients, setClients] = useState<Client[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [vatRecords, setVatRecords] = useState<VatRecord[]>([]);
+  const [complianceClients, setComplianceClients] = useState<ComplianceClient[]>([]);
   const [loading, setLoading] = useState(true);
 
   const isAdmin = user?.role === "super_admin" || user?.role === "admin";
@@ -148,12 +177,15 @@ export default function Dashboard() {
 
         if (isAdmin) {
           try {
-            const [logsData, usersData] = await Promise.all([
+            const [logsData, usersData, vatData] = await Promise.all([
               api.get("/api/audit-logs"),
               api.get("/api/users"),
+              api.get("/api/vat-records"),
             ]);
             setAuditLogs(logsData);
             setUsers(usersData);
+            setVatRecords(vatData);
+            setComplianceClients(results[3]);
           } catch {}
         }
       } catch (err) {
@@ -204,11 +236,35 @@ export default function Dashboard() {
     />;
   }
 
-  const upcomingDeadlineCount = tasks.filter(t => {
+  const now = new Date();
+
+  // Compliance deadlines (VAT + CT) — next 30 days including overdue
+  const complianceDeadlines: ComplianceDeadline[] = [
+    ...vatRecords
+      .filter(r => r.vatDueDate && r.status !== "Filed" && r.status !== "Completed")
+      .map(r => {
+        const days = differenceInDays(new Date(r.vatDueDate!), now);
+        const clientName = clients.find(c => c.id === r.clientId)?.companyName || `Client #${r.clientId}`;
+        return { id: `vat-${r.id}`, name: clientName, label: `VAT ${r.vatQuarter}`, dueDate: r.vatDueDate!, status: r.status, type: "vat" as const, daysLeft: days };
+      }),
+    ...complianceClients
+      .filter(c => (c.corporateTaxDueDate || c.corporateTaxStartMonth || c.corporateTaxEndMonth) && c.corporateTaxStatus !== "Filed" && c.corporateTaxStatus !== "Completed")
+      .filter(c => c.corporateTaxDueDate)
+      .map(c => {
+        const days = differenceInDays(new Date(c.corporateTaxDueDate!), now);
+        return { id: `ct-${c.id}`, name: c.companyName, label: "Corporate Tax", dueDate: c.corporateTaxDueDate!, status: c.corporateTaxStatus || "Not Started", type: "ct" as const, daysLeft: days };
+      }),
+  ].sort((a, b) => a.daysLeft - b.daysLeft);
+
+  const upcomingComplianceCount = complianceDeadlines.filter(d => d.daysLeft >= 0 && d.daysLeft <= 30).length;
+  const overdueComplianceCount = complianceDeadlines.filter(d => d.daysLeft < 0).length;
+
+  const taskDeadlines7 = tasks.filter(t => {
     if (t.status === "Completed" || t.status === "Done" || !t.dueDate) return false;
-    const days = differenceInDays(new Date(t.dueDate), new Date());
+    const days = differenceInDays(new Date(t.dueDate), now);
     return days >= 0 && days <= 7;
   }).length;
+  const upcomingDeadlineCount = taskDeadlines7 + complianceDeadlines.filter(d => d.daysLeft >= 0 && d.daysLeft <= 7).length;
 
   const clientsByCountry = [
     { name: 'UK', value: stats.clientsByCountry.UK || 0, color: '#6B9080' },
@@ -242,7 +298,7 @@ export default function Dashboard() {
           description="VAT & CT Returns Pending"
           iconClassName="bg-destructive/10 border border-destructive/20"
           iconColor="text-destructive"
-          onClick={() => setLocation("/compliance")}
+          onClick={() => setLocation("/compliance?filter=overdue")}
         />
         <KPICard
           title="Active Tasks"
@@ -255,8 +311,8 @@ export default function Dashboard() {
           title="Upcoming Deadlines"
           value={upcomingDeadlineCount}
           icon={Calendar}
-          description="Due in next 7 days"
-          onClick={() => setLocation("/tasks")}
+          description="Tasks & compliance due in 7 days"
+          onClick={() => setLocation("/compliance")}
         />
         <KPICard
           title="Done"
@@ -452,6 +508,82 @@ export default function Dashboard() {
           </Card>
         </div>
       )}
+
+      {/* Upcoming Deadlines & Reminders */}
+      <div className="mt-6">
+        <Card className="shadow-sm border-border/60">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                Upcoming Deadlines &amp; Reminders
+              </CardTitle>
+              <CardDescription>
+                All compliance filings due — {overdueComplianceCount > 0 && <span className="text-destructive font-semibold">{overdueComplianceCount} overdue · </span>}{upcomingComplianceCount} due in next 30 days
+              </CardDescription>
+            </div>
+            <Button variant="outline" size="sm" className="h-8" onClick={() => setLocation("/compliance")} data-testid="button-view-compliance">
+              View Compliance <ArrowUpRight className="ml-1 size-3" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {complianceDeadlines.length === 0 ? (
+              <div className="text-center py-8">
+                <CheckCheck className="h-10 w-10 mx-auto text-green-500/30 mb-3" />
+                <p className="text-muted-foreground text-sm">No upcoming compliance deadlines</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                {complianceDeadlines.slice(0, 20).map((d) => {
+                  const isOverdue = d.daysLeft < 0;
+                  const isUrgent = d.daysLeft >= 0 && d.daysLeft <= 7;
+                  return (
+                    <div
+                      key={d.id}
+                      className={cn(
+                        "flex items-center justify-between p-3 rounded-lg border transition-colors cursor-pointer",
+                        isOverdue ? "border-destructive/40 bg-destructive/5 hover:bg-destructive/10" :
+                        isUrgent ? "border-warning/40 bg-warning/5 hover:bg-warning/10" :
+                        "border-border/50 hover:bg-secondary/20"
+                      )}
+                      onClick={() => setLocation("/compliance")}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={cn(
+                          "h-8 w-8 rounded-full flex items-center justify-center shrink-0",
+                          d.type === "vat" ? "bg-primary/10" : "bg-blue-100 dark:bg-blue-900/30"
+                        )}>
+                          {d.type === "vat"
+                            ? <FileText className="h-4 w-4 text-primary" />
+                            : <Building2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          }
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{d.name}</p>
+                          <p className="text-xs text-muted-foreground">{d.label}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0 ml-2">
+                        <span className="text-xs text-muted-foreground hidden sm:block">
+                          {format(new Date(d.dueDate), "MMM d, yyyy")}
+                        </span>
+                        <span className={cn(
+                          "text-xs font-semibold px-2 py-0.5 rounded-full",
+                          isOverdue ? "bg-destructive/15 text-destructive" :
+                          isUrgent ? "bg-warning/15 text-warning-foreground" :
+                          "bg-muted text-muted-foreground"
+                        )}>
+                          {isOverdue ? `${Math.abs(d.daysLeft)}d overdue` : d.daysLeft === 0 ? "Today" : `${d.daysLeft}d left`}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 mt-6">
         <Card className="shadow-sm border-border/60">

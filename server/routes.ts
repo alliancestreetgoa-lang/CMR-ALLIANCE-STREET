@@ -862,7 +862,26 @@ export async function registerRoutes(
               UK: allClients.filter(c => c.country === "UK").length,
               UAE: allClients.filter(c => c.country === "UAE").length,
             },
-        overdueVat: vatRecords.filter(r => r.status === "Overdue").length,
+        overdueVat: (() => {
+          const now = new Date();
+          const overdueVatCount = vatRecords.filter(r => {
+            if (!r.vatDueDate) return r.status === "Overdue";
+            return r.status === "Overdue" || (
+              new Date(r.vatDueDate) < now &&
+              r.status !== "Filed" &&
+              r.status !== "Completed"
+            );
+          }).length;
+          const overdueCtCount = isEmployee ? 0 : allClients.filter(c => {
+            if (!c.corporateTaxDueDate) return c.corporateTaxStatus === "Overdue";
+            return c.corporateTaxStatus === "Overdue" || (
+              new Date(c.corporateTaxDueDate) < now &&
+              c.corporateTaxStatus !== "Filed" &&
+              c.corporateTaxStatus !== "Completed"
+            );
+          }).length;
+          return overdueVatCount + overdueCtCount;
+        })(),
         activeTasks: tasks.filter(t => t.status !== "Completed" && t.status !== "Done").length,
         urgentTasks: tasks.filter(t => t.priority === "Emergency" || t.priority === "High").length,
         tasksByStatus: {
