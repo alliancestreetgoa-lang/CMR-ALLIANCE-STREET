@@ -11,8 +11,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, FileText, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
-import { format, differenceInDays, parse } from "date-fns";
+import { Calendar as CalendarIcon, FileText, CheckCircle2, Loader2 } from "lucide-react";
+import { format, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -23,15 +23,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth";
 import type { VatRecord, Client } from "@shared/schema";
 
 const ctStatuses = ["Not Started", "In Progress", "Filed", "Completed", "Overdue"] as const;
+type CountryFilter = "all" | "UK" | "UAE";
 
 export default function Compliance() {
   const [vatRecords, setVatRecords] = useState<VatRecord[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
+  const [countryFilter, setCountryFilter] = useState<CountryFilter>("all");
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     Promise.all([
@@ -46,6 +50,22 @@ export default function Compliance() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // Determine which country filter buttons to show based on user permissions
+  const allowedCountries = user?.allowedCountries ?? null;
+  const allowedSet = allowedCountries ? new Set(allowedCountries.split(",").map(s => s.trim())) : null;
+  const showUK = !allowedSet || allowedSet.has("UK");
+  const showUAE = !allowedSet || allowedSet.has("UAE");
+  const showFilterButtons = showUK && showUAE;
+
+  // Filtered clients & records based on selected country
+  const filteredClients = countryFilter === "all"
+    ? clients
+    : clients.filter(c => c.country === countryFilter);
+
+  const filteredClientIds = new Set(filteredClients.map(c => c.id));
+
+  const filteredVatRecords = vatRecords.filter(r => filteredClientIds.has(r.clientId));
 
   const getClientName = (clientId: number) => {
     const client = clients.find((c) => c.id === clientId);
@@ -71,7 +91,7 @@ export default function Compliance() {
     return "secondary";
   };
 
-  const sortedRecords = [...vatRecords].sort((a, b) =>
+  const sortedRecords = [...filteredVatRecords].sort((a, b) =>
     new Date(a.vatDueDate ?? "").getTime() - new Date(b.vatDueDate ?? "").getTime()
   );
 
@@ -84,22 +104,22 @@ export default function Compliance() {
     return { text: `${days} days left`, color: "text-muted-foreground" };
   };
 
-  const openVatReturns = vatRecords.filter(
+  const openVatReturns = filteredVatRecords.filter(
     (r) => r.status === "Not Started" || r.status === "In Progress"
   ).length;
 
-  const dueWithin7Days = vatRecords.filter((r) => {
+  const dueWithin7Days = filteredVatRecords.filter((r) => {
     if (!r.vatDueDate || r.status === "Filed" || r.status === "Completed") return false;
     const days = differenceInDays(new Date(r.vatDueDate), new Date());
     return days >= 0 && days <= 7;
   }).length;
 
-  const overdueCount = vatRecords.filter((r) => {
+  const overdueCount = filteredVatRecords.filter((r) => {
     if (!r.vatDueDate) return false;
     return r.status === "Overdue" || (differenceInDays(new Date(r.vatDueDate), new Date()) < 0 && r.status !== "Filed" && r.status !== "Completed");
   }).length;
 
-  const clientsWithTax = clients.filter(
+  const clientsWithTax = filteredClients.filter(
     (c) => c.corporateTaxDueDate || c.corporateTaxStartMonth || c.corporateTaxEndMonth
   );
 
@@ -116,9 +136,31 @@ export default function Compliance() {
   return (
     <DashboardLayout>
        <div className="flex flex-col gap-6">
-        <div>
-          <h1 className="text-3xl font-heading font-bold tracking-tight text-foreground" data-testid="text-compliance-title">Compliance Tracker</h1>
-          <p className="text-muted-foreground">Monitor VAT returns, Corporate Tax filings, and deadlines.</p>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-heading font-bold tracking-tight text-foreground" data-testid="text-compliance-title">Compliance Tracker</h1>
+            <p className="text-muted-foreground">Monitor VAT returns, Corporate Tax filings, and deadlines.</p>
+          </div>
+
+          {showFilterButtons && (
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-1 self-start" data-testid="country-filter-group">
+              {(["all", "UK", "UAE"] as CountryFilter[]).map((f) => (
+                <button
+                  key={f}
+                  data-testid={`filter-country-${f}`}
+                  onClick={() => setCountryFilter(f)}
+                  className={cn(
+                    "px-4 py-1.5 rounded-md text-sm font-medium transition-colors",
+                    countryFilter === f
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {f === "all" ? "All" : f}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <Tabs defaultValue="vat" className="w-full">
@@ -161,12 +203,16 @@ export default function Compliance() {
             <Card className="border-border/60">
               <CardHeader>
                 <CardTitle>VAT Schedule</CardTitle>
-                <CardDescription>Upcoming filing deadlines for all clients.</CardDescription>
+                <CardDescription>
+                  Upcoming filing deadlines
+                  {countryFilter !== "all" ? ` — ${countryFilter} clients` : " for all clients"}.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
                   {sortedRecords.map((record) => {
                     const daysRemaining = getDaysRemaining(record.vatDueDate);
+                    const client = clients.find(c => c.id === record.clientId);
                     return (
                       <div key={record.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-border/50 hover:bg-secondary/30 transition-colors" data-testid={`row-vat-${record.id}`}>
                         <div className="flex items-start gap-4 mb-4 sm:mb-0">
@@ -174,7 +220,19 @@ export default function Compliance() {
                               <FileText className="h-5 w-5 text-primary" />
                            </div>
                            <div>
-                             <h4 className="font-semibold text-foreground" data-testid={`text-client-name-${record.id}`}>{getClientName(record.clientId)}</h4>
+                             <div className="flex items-center gap-2">
+                               <h4 className="font-semibold text-foreground" data-testid={`text-client-name-${record.id}`}>{getClientName(record.clientId)}</h4>
+                               {client && (
+                                 <span className={cn(
+                                   "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
+                                   client.country === "UK"
+                                     ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+                                     : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                                 )}>
+                                   {client.country}
+                                 </span>
+                               )}
+                             </div>
                              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                                <span>{record.vatQuarter} Return</span>
                                <span>•</span>
@@ -206,7 +264,7 @@ export default function Compliance() {
                   })}
                   {sortedRecords.length === 0 && (
                     <div className="text-center text-muted-foreground py-8" data-testid="text-no-vat-records">
-                      No VAT records found.
+                      No VAT records found{countryFilter !== "all" ? ` for ${countryFilter} clients` : ""}.
                     </div>
                   )}
                 </div>
@@ -218,7 +276,10 @@ export default function Compliance() {
             <Card className="border-border/60">
               <CardHeader>
                 <CardTitle>Corporate Tax Schedule</CardTitle>
-                <CardDescription>Corporate tax filing deadlines for all clients.</CardDescription>
+                <CardDescription>
+                  Corporate tax filing deadlines
+                  {countryFilter !== "all" ? ` — ${countryFilter} clients` : " for all clients"}.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
@@ -231,7 +292,17 @@ export default function Compliance() {
                               <CalendarIcon className="h-5 w-5 text-primary" />
                            </div>
                            <div>
-                             <h4 className="font-semibold text-foreground" data-testid={`text-ct-client-${client.id}`}>{client.companyName}</h4>
+                             <div className="flex items-center gap-2">
+                               <h4 className="font-semibold text-foreground" data-testid={`text-ct-client-${client.id}`}>{client.companyName}</h4>
+                               <span className={cn(
+                                 "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
+                                 client.country === "UK"
+                                   ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+                                   : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                               )}>
+                                 {client.country}
+                               </span>
+                             </div>
                              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                                <span>Tax Period: {client.corporateTaxStartMonth ?? "—"} - {client.corporateTaxEndMonth ?? "—"}</span>
                              </div>
@@ -278,7 +349,7 @@ export default function Compliance() {
                   })}
                   {clientsWithTax.length === 0 && (
                     <div className="text-center text-muted-foreground py-8" data-testid="text-no-ct-records">
-                      No corporate tax records found.
+                      No corporate tax records found{countryFilter !== "all" ? ` for ${countryFilter} clients` : ""}.
                     </div>
                   )}
                 </div>
