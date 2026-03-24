@@ -89,37 +89,35 @@ export default function TerminalDashboard() {
 
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
-    queryFn: () => apiFetch("/api/dashboard/stats").then((r) => r.json()),
+    queryFn: () => apiFetch("/api/dashboard/stats"),
   });
 
   const { data: clients = [], isLoading: clientsLoading } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
-    queryFn: () => apiFetch("/api/clients").then((r) => r.json()),
+    queryFn: () => apiFetch("/api/clients"),
   });
 
   const { data: tasks = [], isLoading: tasksLoading } = useQuery<Task[]>({
     queryKey: ["/api/tasks"],
-    queryFn: () => apiFetch("/api/tasks").then((r) => r.json()),
+    queryFn: () => apiFetch("/api/tasks"),
   });
 
   const { data: auditLogs = [], isLoading: logsLoading } = useQuery<AuditLog[]>({
     queryKey: ["/api/audit-logs"],
-    queryFn: () => apiFetch("/api/audit-logs").then((r) => r.json()),
+    queryFn: () => apiFetch("/api/audit-logs"),
     enabled: user?.role === "super_admin" || user?.role === "admin",
   });
 
   const { data: users = [] } = useQuery<User[]>({
     queryKey: ["/api/users"],
-    queryFn: () => apiFetch("/api/users").then((r) => r.json()),
+    queryFn: () => apiFetch("/api/users"),
     enabled: user?.role === "super_admin" || user?.role === "admin",
   });
 
   const clientMap = Object.fromEntries(clients.map((c) => [c.id, c.companyName]));
   const userMap = Object.fromEntries(users.map((u) => [u.id, u.name]));
 
-  const activeTasks = tasks
-    .filter((t) => t.status !== "Completed" && t.status !== "Done")
-    .slice(0, 20);
+  const activeTasks = tasks.slice(0, 20);
 
   const recentLogs = [...auditLogs]
     .sort((a, b) => new Date(b.timestamp ?? 0).getTime() - new Date(a.timestamp ?? 0).getTime())
@@ -128,41 +126,42 @@ export default function TerminalDashboard() {
   const employees = users.filter((u) => u.role === "employee");
   const admins = users.filter((u) => u.role === "admin");
 
+  const activeClientCount = clients.filter((c) => c.status === "Active").length;
+  const totalTaskCount = tasks.length;
+  const overdueTaskCount = tasks.filter((t) => {
+    if (!t.dueDate) return false;
+    return new Date(t.dueDate) < new Date() && t.status !== "Completed" && t.status !== "Done";
+  }).length;
+
   const kpis = [
     {
-      label: "ACTIVE_CLIENTS",
-      value: statsLoading ? "…" : String(stats?.totalClients ?? 0),
-      trend: null,
+      label: "TOTAL_CLIENTS",
+      value: clientsLoading ? "…" : String(clients.length),
       status: "good",
     },
     {
-      label: "OPEN_TASKS",
-      value: statsLoading ? "…" : String(stats?.activeTasks ?? 0),
-      trend: null,
+      label: "ACTIVE_CLIENTS",
+      value: clientsLoading ? "…" : String(activeClientCount),
+      status: "good",
+    },
+    {
+      label: "TOTAL_TASKS",
+      value: tasksLoading ? "…" : String(totalTaskCount),
       status: "warning",
     },
     {
-      label: "URGENT",
-      value: statsLoading ? "…" : String(stats?.urgentTasks ?? 0),
-      trend: null,
-      status: stats && stats.urgentTasks > 5 ? "critical" : "warning",
-    },
-    {
-      label: "OVERDUE_VAT",
-      value: statsLoading ? "…" : String(stats?.overdueVat ?? 0),
-      trend: null,
-      status: stats && stats.overdueVat > 0 ? "critical" : "good",
+      label: "OVERDUE",
+      value: tasksLoading ? "…" : String(overdueTaskCount),
+      status: overdueTaskCount > 0 ? "critical" : "good",
     },
     {
       label: "COMPLETED",
       value: statsLoading ? "…" : String(stats?.doneTasks ?? 0),
-      trend: null,
       status: "good",
     },
     {
       label: "EMPLOYEES",
       value: statsLoading ? "…" : String(stats?.totalEmployees ?? 0),
-      trend: null,
       status: "good",
     },
   ];
