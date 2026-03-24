@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Redirect } from "wouter";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Loader2, Plus, Trash2, Eye, Printer, FileText, DollarSign, CalendarCheck, User, CalendarDays, BarChart3, Download, FileSpreadsheet } from "lucide-react";
+import { Loader2, Plus, Trash2, Eye, FileText, DollarSign, CalendarCheck, User, CalendarDays, BarChart3, Download, FileSpreadsheet } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -1558,10 +1558,6 @@ function SalarySlipsTab({ users, toast }: { users: UserData[]; toast: any }) {
                   PDF
                 </Button>
               )}
-              <Button onClick={() => window.print()} data-testid="button-print-slip">
-                <Printer className="mr-2 h-4 w-4" />
-                Print
-              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
