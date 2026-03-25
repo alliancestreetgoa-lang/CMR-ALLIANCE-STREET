@@ -268,6 +268,68 @@ export default function Clients() {
     return matchesSearch && matchesCountry && matchesStatus;
   });
 
+  const handleExport = () => {
+    const headers = [
+      "Company Name", "Country", "Status", "Contact Person", "Email", "Phone",
+      "VAT Number", "License Expiry Date",
+      "Corp Tax Start", "Corp Tax End", "Corp Tax Due Date", "Corp Tax Status",
+      "VAT Q1 Period", "VAT Q1 Due", "VAT Q1 Status",
+      "VAT Q2 Period", "VAT Q2 Due", "VAT Q2 Status",
+      "VAT Q3 Period", "VAT Q3 Due", "VAT Q3 Status",
+      "VAT Q4 Period", "VAT Q4 Due", "VAT Q4 Status",
+    ];
+
+    const escape = (v: string | null | undefined) => {
+      if (v == null || v === "") return "";
+      const s = String(v);
+      return s.includes(",") || s.includes('"') || s.includes("\n")
+        ? `"${s.replace(/"/g, '""')}"`
+        : s;
+    };
+
+    const rows = filteredClients.map(client => {
+      const q1 = vatRecords.find(r => r.clientId === client.id && r.vatQuarter === "Q1");
+      const q2 = vatRecords.find(r => r.clientId === client.id && r.vatQuarter === "Q2");
+      const q3 = vatRecords.find(r => r.clientId === client.id && r.vatQuarter === "Q3");
+      const q4 = vatRecords.find(r => r.clientId === client.id && r.vatQuarter === "Q4");
+
+      const qPeriod = (r: typeof q1) => r ? `${r.vatPeriodStart ?? ""} - ${r.vatPeriodEnd ?? ""}` : "";
+
+      return [
+        escape(client.companyName),
+        escape(client.country),
+        escape(client.status),
+        escape(client.contactPerson),
+        escape(client.email),
+        escape(client.phone),
+        escape(client.vatNumber),
+        escape(client.licenseExpiryDate),
+        escape(client.corporateTaxStartMonth),
+        escape(client.corporateTaxEndMonth),
+        escape(client.corporateTaxDueDate),
+        escape(client.corporateTaxStatus),
+        escape(qPeriod(q1)), escape(q1?.vatDueDate), escape(q1?.status),
+        escape(qPeriod(q2)), escape(q2?.vatDueDate), escape(q2?.status),
+        escape(qPeriod(q3)), escape(q3?.vatDueDate), escape(q3?.status),
+        escape(qPeriod(q4)), escape(q4?.vatDueDate), escape(q4?.status),
+      ].join(",");
+    });
+
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const filterLabel = countryFilter !== "ALL" ? `_${countryFilter}` : "";
+    const statusLabel = statusFilter !== "ALL" ? `_${statusFilter}` : "";
+    link.download = `clients${filterLabel}${statusLabel}_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast({ title: `Exported ${filteredClients.length} client${filteredClients.length !== 1 ? "s" : ""} to CSV` });
+  };
+
   const getVatRecord = (clientId: number, quarter: "Q1" | "Q2" | "Q3" | "Q4") => {
     return vatRecords.find(r => r.clientId === clientId && r.vatQuarter === quarter) || null;
   };
@@ -885,7 +947,7 @@ export default function Clients() {
                    </Button>
                  </div>
                  )}
-                 <Button variant="outline" size="sm" className="h-9">
+                 <Button variant="outline" size="sm" className="h-9" onClick={handleExport} data-testid="button-export">
                    <Download className="mr-2 h-3 w-3" /> Export
                  </Button>
                </div>
