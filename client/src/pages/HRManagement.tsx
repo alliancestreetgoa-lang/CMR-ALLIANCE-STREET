@@ -1749,18 +1749,20 @@ function PayrollSummaryTab({ users, toast }: { users: UserData[]; toast: any }) 
                 ))}
               </SelectContent>
             </Select>
-            <div className="flex items-center border rounded-md bg-background p-0.5">
+            <div className="flex items-center gap-2">
               {(["ALL", "UK", "UAE"] as const).map((c) => (
-                <Button
+                <button
                   key={c}
-                  variant={countryFilter === c ? "secondary" : "ghost"}
-                  size="sm"
-                  data-testid={`filter-payroll-country-${c.toLowerCase()}`}
                   onClick={() => setCountryFilter(c)}
-                  className="h-7 text-xs"
+                  data-testid={`filter-payroll-country-${c.toLowerCase()}`}
+                  className={`px-3 py-1.5 rounded-md border text-sm font-medium transition-colors cursor-pointer ${
+                    countryFilter === c
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background text-foreground border-border hover:bg-muted"
+                  }`}
                 >
                   {c === "ALL" ? "All" : c}
-                </Button>
+                </button>
               ))}
             </div>
             {slips.length > 0 && (
