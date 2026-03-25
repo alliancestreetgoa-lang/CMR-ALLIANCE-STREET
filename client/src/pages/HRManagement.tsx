@@ -1714,7 +1714,14 @@ function PayrollSummaryTab({ users, toast }: { users: UserData[]; toast: any }) 
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <CardTitle>Payroll Summary</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>Payroll Summary</CardTitle>
+              {countryFilter !== "ALL" && (
+                <Badge variant="secondary" data-testid={`badge-selected-country-${countryFilter.toLowerCase()}`}>
+                  {countryFilter}
+                </Badge>
+              )}
+            </div>
             <CardDescription>Total salary overview of all employees month wise</CardDescription>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
