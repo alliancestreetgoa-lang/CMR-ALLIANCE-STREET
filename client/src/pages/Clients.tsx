@@ -350,6 +350,11 @@ export default function Clients() {
 
   const getVatStatusBadge = (clientId: number, quarter: "Q1" | "Q2" | "Q3" | "Q4") => {
     const record = getVatRecord(clientId, quarter);
+
+    if (!record || record.isActive === "false") {
+      return <span className="text-xs text-muted-foreground">—</span>;
+    }
+
     const status = record?.status || "Not Started";
     
     let variant: "default" | "success" | "destructive" | "warning" | "secondary" | "outline" = "outline";
@@ -1163,6 +1168,7 @@ export default function Clients() {
                   const startKey = `vat${q}Start` as keyof typeof editFormData;
                   const endKey = `vat${q}End` as keyof typeof editFormData;
                   const isActive = editFormData[activeKey] as boolean;
+                  if (!isActive) return null;
                   return (
                     <div key={q} className="flex items-center gap-2">
                       <Label className="text-sm text-muted-foreground w-6 shrink-0">{q}</Label>
@@ -1185,12 +1191,12 @@ export default function Clients() {
                       <Button
                         type="button"
                         size="sm"
-                        variant={isActive ? "default" : "outline"}
+                        variant="default"
                         data-testid={`toggle-edit-vat-${q.toLowerCase()}-active`}
-                        className={`text-xs min-w-[80px] shrink-0 ${isActive ? "bg-green-600 hover:bg-green-700 text-white" : "text-muted-foreground border-dashed"}`}
+                        className="text-xs min-w-[80px] shrink-0 bg-green-600 hover:bg-green-700 text-white"
                         onClick={() => setEditFormData({ ...editFormData, [activeKey]: !isActive })}
                       >
-                        {isActive ? "Active" : "Inactive"}
+                        Active
                       </Button>
                     </div>
                   );
