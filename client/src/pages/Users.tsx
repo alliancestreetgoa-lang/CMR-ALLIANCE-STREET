@@ -114,6 +114,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [countryFilter, setCountryFilter] = useState<"ALL" | "UK" | "UAE">("ALL");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   
@@ -146,7 +147,13 @@ export default function UsersPage() {
 
   const filteredUsers = users.filter(user => {
     if (currentUser?.role !== "super_admin" && user.role === "super_admin") return false;
-    return user.name.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!user.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    if (countryFilter !== "ALL") {
+      if (user.role === "super_admin") return true;
+      const countries = parseCountries(user.allowedCountries);
+      if (!countries.includes(countryFilter)) return false;
+    }
+    return true;
   });
 
   const handleAddUser = async () => {
@@ -320,16 +327,32 @@ export default function UsersPage() {
 
         <Card className="border-border/60 shadow-sm">
           <CardHeader className="pb-4">
-             <div className="relative w-full sm:w-72">
-               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-               <Input 
-                 placeholder="Search users..." 
-                 className="pl-9 bg-background" 
-                 value={searchTerm}
-                 onChange={(e) => setSearchTerm(e.target.value)}
-                 data-testid="input-search-users"
-               />
-             </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search users..."
+                  className="pl-9 bg-background"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  data-testid="input-search-users"
+                />
+              </div>
+              <div className="flex items-center gap-1 border rounded-md p-0.5 bg-muted/30">
+                {(["ALL", "UK", "UAE"] as const).map((f) => (
+                  <Button
+                    key={f}
+                    variant={countryFilter === f ? "secondary" : "ghost"}
+                    size="sm"
+                    data-testid={`filter-country-${f.toLowerCase()}`}
+                    onClick={() => setCountryFilter(f)}
+                    className={`text-xs px-3 ${countryFilter === f ? "shadow-sm" : ""}`}
+                  >
+                    {f === "ALL" ? "All" : f}
+                  </Button>
+                ))}
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="rounded-md border overflow-hidden">
