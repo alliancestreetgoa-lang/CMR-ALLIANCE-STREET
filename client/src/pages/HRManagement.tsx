@@ -1571,6 +1571,7 @@ function PayrollSummaryTab({ users, toast }: { users: UserData[]; toast: any }) 
   const [selectedYear, setSelectedYear] = useState(String(new Date().getFullYear()));
   const [slips, setSlips] = useState<SalarySlip[]>([]);
   const [loading, setLoading] = useState(false);
+  const [countryFilter, setCountryFilter] = useState<"ALL" | "UK" | "UAE">("ALL");
 
   const months = [
     { value: "1", label: "January" },
@@ -1610,13 +1611,19 @@ function PayrollSummaryTab({ users, toast }: { users: UserData[]; toast: any }) 
     fetchSlips();
   }, [selectedMonth, selectedYear]);
 
-  const totalGross = slips.reduce((sum, s) => sum + (parseFloat(s.grossSalary) || 0), 0);
-  const totalDeductions = slips.reduce((sum, s) => sum + (parseFloat(s.deductions || "0") || 0) + (parseFloat(s.pf || "0") || 0) + (parseFloat(s.tds || "0") || 0), 0);
-  const totalNet = slips.reduce((sum, s) => sum + (parseFloat(s.netSalary) || 0), 0);
-  const currency = slips.length > 0 ? slips[0].currency : "AED";
+  const getCurrencyCountry = (curr: string) => curr === "AED" ? "UAE" : "UK";
+  
+  const filteredSlips = countryFilter === "ALL" 
+    ? slips 
+    : slips.filter(s => getCurrencyCountry(s.currency) === countryFilter);
+  
+  const totalGross = filteredSlips.reduce((sum, s) => sum + (parseFloat(s.grossSalary) || 0), 0);
+  const totalDeductions = filteredSlips.reduce((sum, s) => sum + (parseFloat(s.deductions || "0") || 0) + (parseFloat(s.pf || "0") || 0) + (parseFloat(s.tds || "0") || 0), 0);
+  const totalNet = filteredSlips.reduce((sum, s) => sum + (parseFloat(s.netSalary) || 0), 0);
+  const currency = filteredSlips.length > 0 ? filteredSlips[0].currency : "AED";
 
   const buildTableData = () =>
-    slips.map((slip, index) => ({
+    filteredSlips.map((slip, index) => ({
       "#": index + 1,
       Employee: getUserName(slip.userId),
       "Working Days": slip.workingDays || "—",
@@ -1735,6 +1742,20 @@ function PayrollSummaryTab({ users, toast }: { users: UserData[]; toast: any }) 
                 ))}
               </SelectContent>
             </Select>
+            <div className="flex items-center border rounded-md bg-background p-0.5">
+              {(["ALL", "UK", "UAE"] as const).map((c) => (
+                <Button
+                  key={c}
+                  variant={countryFilter === c ? "secondary" : "ghost"}
+                  size="sm"
+                  data-testid={`filter-payroll-country-${c.toLowerCase()}`}
+                  onClick={() => setCountryFilter(c)}
+                  className="h-7 text-xs"
+                >
+                  {c === "ALL" ? "All" : c}
+                </Button>
+              ))}
+            </div>
             {slips.length > 0 && (
               <>
                 <Button variant="outline" size="sm" onClick={exportToPDF} data-testid="button-export-pdf" className="gap-1.5">
@@ -1785,7 +1806,7 @@ function PayrollSummaryTab({ users, toast }: { users: UserData[]; toast: any }) 
             </div>
 
             <div className="text-sm text-muted-foreground text-center">
-              <Badge variant="secondary">{slips.length} employee(s)</Badge>
+              <Badge variant="secondary">{filteredSlips.length} employee(s)</Badge>
               <span className="ml-2">for {getMonthName(selectedMonth)} {selectedYear}</span>
             </div>
 
@@ -1806,7 +1827,7 @@ function PayrollSummaryTab({ users, toast }: { users: UserData[]; toast: any }) 
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {slips.map((slip, index) => (
+                  {filteredSlips.map((slip, index) => (
                     <TableRow key={slip.id} data-testid={`row-payroll-${slip.id}`}>
                       <TableCell className="text-muted-foreground">{index + 1}</TableCell>
                       <TableCell className="font-medium">{getUserName(slip.userId)}</TableCell>
