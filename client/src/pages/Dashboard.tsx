@@ -178,7 +178,7 @@ export default function Dashboard() {
         if (isAdmin) {
           try {
             const [logsData, usersData, vatData] = await Promise.all([
-              api.get("/api/audit-logs"),
+              user?.role === "super_admin" ? api.get("/api/audit-logs") : Promise.resolve([]),
               api.get("/api/users"),
               api.get("/api/vat-records"),
             ]);
@@ -585,32 +585,34 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 mt-6">
-        <Card className="shadow-sm border-border/60">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Latest system actions</CardDescription>
-            </div>
-            <Button variant="outline" size="sm" className="h-8" onClick={() => setLocation("/activity")} data-testid="button-view-all-activity">View All</Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {auditLogs.slice(0, 5).map((log) => (
-                <div key={log.id} className="flex items-start gap-4 pb-4 last:pb-0 last:border-0 border-b border-border/50" data-testid={`activity-log-${log.id}`}>
-                  <div className="mt-1 size-2 rounded-full bg-primary/40 shrink-0" />
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none">{log.description}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(log.timestamp), "MMM d, h:mm a")} &bull; {getUserName(log.userId)}
-                    </p>
+      {user?.role === "super_admin" && (
+        <div className="grid gap-4 md:grid-cols-2 mt-6">
+          <Card className="shadow-sm border-border/60">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>Latest system actions</CardDescription>
+              </div>
+              <Button variant="outline" size="sm" className="h-8" onClick={() => setLocation("/activity")} data-testid="button-view-all-activity">View All</Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {auditLogs.slice(0, 5).map((log) => (
+                  <div key={log.id} className="flex items-start gap-4 pb-4 last:pb-0 last:border-0 border-b border-border/50" data-testid={`activity-log-${log.id}`}>
+                    <div className="mt-1 size-2 rounded-full bg-primary/40 shrink-0" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium leading-none">{log.description}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(log.timestamp), "MMM d, h:mm a")} &bull; {getUserName(log.userId)}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
