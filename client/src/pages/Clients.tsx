@@ -1168,36 +1168,50 @@ export default function Clients() {
                   const startKey = `vat${q}Start` as keyof typeof editFormData;
                   const endKey = `vat${q}End` as keyof typeof editFormData;
                   const isActive = editFormData[activeKey] as boolean;
-                  if (!isActive) return null;
                   return (
                     <div key={q} className="flex items-center gap-2">
                       <Label className="text-sm text-muted-foreground w-6 shrink-0">{q}</Label>
-                      <Input
-                        data-testid={`input-edit-vat-${q.toLowerCase()}-start`}
-                        type="date"
-                        placeholder="Start"
-                        value={editFormData[startKey] as string}
-                        onChange={e => setEditFormData({ ...editFormData, [startKey]: e.target.value })}
-                        className="flex-1 text-sm"
-                      />
-                      <Input
-                        data-testid={`input-edit-vat-${q.toLowerCase()}-end`}
-                        type="date"
-                        placeholder="End"
-                        value={editFormData[endKey] as string}
-                        onChange={e => setEditFormData({ ...editFormData, [endKey]: e.target.value })}
-                        className="flex-1 text-sm"
-                      />
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="default"
-                        data-testid={`toggle-edit-vat-${q.toLowerCase()}-active`}
-                        className="text-xs min-w-[80px] shrink-0 bg-green-600 hover:bg-green-700 text-white"
-                        onClick={() => setEditFormData({ ...editFormData, [activeKey]: !isActive })}
-                      >
-                        Active
-                      </Button>
+                      {isActive ? (
+                        <>
+                          <Input
+                            data-testid={`input-edit-vat-${q.toLowerCase()}-start`}
+                            type="date"
+                            placeholder="Start"
+                            value={editFormData[startKey] as string}
+                            onChange={e => setEditFormData({ ...editFormData, [startKey]: e.target.value })}
+                            className="flex-1 text-sm"
+                          />
+                          <Input
+                            data-testid={`input-edit-vat-${q.toLowerCase()}-end`}
+                            type="date"
+                            placeholder="End"
+                            value={editFormData[endKey] as string}
+                            onChange={e => setEditFormData({ ...editFormData, [endKey]: e.target.value })}
+                            className="flex-1 text-sm"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="default"
+                            data-testid={`toggle-edit-vat-${q.toLowerCase()}-active`}
+                            className="text-xs min-w-[80px] shrink-0 bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => setEditFormData({ ...editFormData, [activeKey]: !isActive })}
+                          >
+                            Active
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          data-testid={`toggle-edit-vat-${q.toLowerCase()}-active`}
+                          className="text-xs min-w-[80px] ml-auto shrink-0 text-muted-foreground border-dashed"
+                          onClick={() => setEditFormData({ ...editFormData, [activeKey]: !isActive })}
+                        >
+                          Inactive
+                        </Button>
+                      )}
                     </div>
                   );
                 })}
