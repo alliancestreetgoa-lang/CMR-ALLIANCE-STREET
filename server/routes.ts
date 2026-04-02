@@ -420,7 +420,7 @@ export async function registerRoutes(
   app.patch("/api/users/:id", authenticate, requireRole("super_admin", "admin"), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const { name, email, role, password, allowedCountries } = req.body;
+      const { name, email, role, password, allowedCountries, isActive } = req.body;
 
       if (req.user!.role === "admin" && role && role !== "employee") {
         return res.status(403).json({ message: "Admins can only assign the employee role" });
@@ -436,6 +436,9 @@ export async function registerRoutes(
       // allowedCountries can be set to null (to clear) or a string value
       if ("allowedCountries" in req.body) {
         updateData.allowedCountries = allowedCountries || null;
+      }
+      if ("isActive" in req.body) {
+        updateData.isActive = isActive === false || isActive === "false" ? "false" : "true";
       }
 
       const [updated] = await db.update(users).set(updateData).where(eq(users.id, id)).returning();

@@ -20,6 +20,7 @@ export const users = pgTable("users", {
   role: roleEnum("role").notNull().default("employee"),
   allowedCountries: text("allowed_countries"), // comma-separated: "UK", "UAE", "UK,UAE", or null = all
   notificationPreferences: text("notification_preferences"),
+  isActive: text("is_active").notNull().default("true"), // "true" | "false"
   createdAt: timestamp("created_at").defaultNow(),
 });
 

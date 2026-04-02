@@ -41,6 +41,7 @@ type UserData = {
   email: string;
   role: "super_admin" | "admin" | "employee";
   allowedCountries: string | null;
+  isActive: string;
   createdAt: string;
 };
 
@@ -181,6 +182,20 @@ export default function UsersPage() {
       toast({ title: "Error", description: err.message || "Failed to create user", variant: "destructive" });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleToggleActive = async (user: UserData) => {
+    const newActive = user.isActive === "true" ? "false" : "true";
+    try {
+      await api.patch(`/api/users/${user.id}`, { isActive: newActive });
+      toast({
+        title: newActive === "true" ? "User Activated" : "User Deactivated",
+        description: `${user.name} is now ${newActive === "true" ? "active" : "inactive"}.`,
+      });
+      await fetchUsers();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to update status", variant: "destructive" });
     }
   };
 
@@ -363,6 +378,7 @@ export default function UsersPage() {
                     <TableHead>Username</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Country Access</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -383,9 +399,29 @@ export default function UsersPage() {
                           <CountryBadges value={user.allowedCountries} />
                         )}
                       </TableCell>
+                      <TableCell data-testid={`status-user-${user.id}`}>
+                        {user.isActive === "true" ? (
+                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-0 text-[11px] font-medium">
+                            Active
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-muted text-muted-foreground border-0 text-[11px] font-medium">
+                            Inactive
+                          </Badge>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right space-x-1">
                         {currentUser?.id !== user.id && canManageUsers(currentUser?.role, user.role) && (
                           <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={user.isActive === "true" ? "text-muted-foreground hover:text-foreground" : "text-green-700 dark:text-green-400 hover:text-green-800"}
+                              onClick={() => handleToggleActive(user)}
+                              data-testid={`button-toggle-active-${user.id}`}
+                            >
+                              {user.isActive === "true" ? "Deactivate" : "Activate"}
+                            </Button>
                             <Button 
                               variant="ghost" 
                               size="sm" 
