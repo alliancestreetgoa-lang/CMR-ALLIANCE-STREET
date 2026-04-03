@@ -352,7 +352,7 @@ export default function Clients() {
     if (!dateStr) return "";
     try {
       const normalized = dateStr.length === 7 ? dateStr + "-01" : dateStr;
-      return format(new Date(normalized), "MMMM yyyy");
+      return format(new Date(normalized), "MMMM");
     } catch {
       return dateStr;
     }
