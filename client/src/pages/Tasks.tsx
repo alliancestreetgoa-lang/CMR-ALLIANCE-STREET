@@ -559,9 +559,9 @@ export default function Tasks() {
         )}
 
         {view === "board" ? (
-          <div className="flex h-full gap-6 overflow-x-auto pb-4">
+          <div className="flex h-full gap-3 pb-4">
             {(Object.keys(columns) as Array<keyof typeof columns>).map((status) => (
-              <div key={status} className="flex flex-col min-w-[320px] max-w-[320px] h-full bg-secondary/20 rounded-xl border border-border/50">
+              <div key={status} className="flex flex-col flex-1 min-w-0 h-full bg-secondary/20 rounded-xl border border-border/50">
                 <div className="p-4 flex items-center justify-between border-b border-border/50 bg-secondary/30 rounded-t-xl">
                   <h3 className="font-semibold text-sm flex items-center gap-2">
                     {status}
