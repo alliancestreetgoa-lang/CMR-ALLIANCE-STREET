@@ -1368,7 +1368,7 @@ Consider:
 
   // ===== AI - CLIENT INSIGHTS =====
 
-  app.post("/api/ai/client-insights", authenticate, async (req, res) => {
+  app.post("/api/ai/client-insights", authenticate, requireRole("super_admin"), async (req, res) => {
     try {
       const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
       const baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || undefined;
@@ -1466,7 +1466,7 @@ Only include clients with actual issues in atRiskClients. Keep insights and reco
     }
   });
 
-  app.post("/api/ai/client-query", authenticate, async (req, res) => {
+  app.post("/api/ai/client-query", authenticate, requireRole("super_admin"), async (req, res) => {
     try {
       const { question } = req.body;
       if (!question || typeof question !== "string" || question.trim().length === 0) {

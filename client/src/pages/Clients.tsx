@@ -377,6 +377,7 @@ export default function Clients() {
   }, []);
 
   const canManageClients = user?.role === "super_admin" || user?.role === "admin";
+  const isSuperAdmin = user?.role === "super_admin";
 
   // Summary stats (computed from all loaded clients, before table filter)
   const visibleClients = clients.filter(c =>
@@ -782,16 +783,18 @@ export default function Clients() {
             <p className="text-muted-foreground">Detailed compliance tracking view.</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              variant="outline"
-              onClick={fetchAiInsights}
-              disabled={aiLoading}
-              className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800 dark:border-purple-800 dark:text-purple-400 dark:hover:bg-purple-950"
-              data-testid="button-ai-insights"
-            >
-              {aiLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-              AI Insights
-            </Button>
+            {isSuperAdmin && (
+              <Button
+                variant="outline"
+                onClick={fetchAiInsights}
+                disabled={aiLoading}
+                className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800 dark:border-purple-800 dark:text-purple-400 dark:hover:bg-purple-950"
+                data-testid="button-ai-insights"
+              >
+                {aiLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                AI Insights
+              </Button>
+            )}
             {canManageClients && (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
@@ -1056,6 +1059,7 @@ export default function Clients() {
         )}
 
         {/* Ask Anything Panel */}
+        {isSuperAdmin && (
         <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 dark:border-indigo-800 dark:bg-indigo-950/30 overflow-hidden">
             <div className="px-4 py-3 flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900 shrink-0">
@@ -1129,6 +1133,7 @@ export default function Clients() {
               <p className="text-[10px] text-indigo-500 dark:text-indigo-400 mt-1.5">Press Enter to send</p>
             </div>
           </div>
+        )}
 
         {/* AI Insights Panel */}
         {aiResult && (
