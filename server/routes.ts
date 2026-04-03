@@ -1193,8 +1193,8 @@ export async function registerRoutes(
 
   app.post("/api/ai/task-priorities", authenticate, requireRole("super_admin", "admin"), async (req, res) => {
     try {
-      const apiKey = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
-      const baseURL = process.env.OPENAI_API_KEY ? undefined : process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+      const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+      const baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || undefined;
 
       if (!apiKey) {
         return res.status(400).json({ message: "OpenAI API key is not configured" });
@@ -1269,10 +1269,10 @@ Consider:
 - Overdue tasks are highest priority`;
 
       const response = await openaiClient.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-5-mini",
         messages: [{ role: "user", content: prompt }],
         response_format: { type: "json_object" },
-        max_tokens: 2000,
+        max_completion_tokens: 2000,
       });
 
       const content = response.choices[0]?.message?.content || "{}";
@@ -1289,8 +1289,8 @@ Consider:
 
   app.post("/api/ai/client-insights", authenticate, requireRole("super_admin", "admin"), async (req, res) => {
     try {
-      const apiKey = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
-      const baseURL = process.env.OPENAI_API_KEY ? undefined : process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+      const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+      const baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || undefined;
 
       if (!apiKey) {
         return res.status(400).json({ message: "OpenAI API key is not configured" });
@@ -1370,10 +1370,10 @@ Focus on:
 Only include clients with actual issues in atRiskClients. Keep insights and recommendations concise and actionable. Limit atRiskClients to top 8 most urgent.`;
 
       const response = await openaiClient.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-5-mini",
         messages: [{ role: "user", content: prompt }],
         response_format: { type: "json_object" },
-        max_tokens: 2000,
+        max_completion_tokens: 2000,
       });
 
       const content = response.choices[0]?.message?.content || "{}";
