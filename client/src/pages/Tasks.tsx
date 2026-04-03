@@ -318,18 +318,16 @@ export default function Tasks() {
                 ))}
               </div>
             )}
-            {isAdmin && (
-              <Button
-                variant="outline"
-                onClick={fetchAiSuggestions}
-                disabled={aiLoading}
-                className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800"
-                data-testid="button-ai-suggestions"
-              >
-                {aiLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                AI Prioritize
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              onClick={fetchAiSuggestions}
+              disabled={aiLoading}
+              className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800"
+              data-testid="button-ai-suggestions"
+            >
+              {aiLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+              AI Prioritize
+            </Button>
             {canAddTasks && (
               <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
