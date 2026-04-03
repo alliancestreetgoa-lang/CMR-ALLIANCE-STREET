@@ -114,6 +114,28 @@ const URGENCY_TEXT: Record<LicenseUrgency, string> = {
   upcoming: "text-amber-600 dark:text-amber-400",
   normal:   "text-foreground",
 };
+const URGENCY_VAT_CELL: Record<LicenseUrgency, string> = {
+  expired:  "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800",
+  critical: "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800",
+  warning:  "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800",
+  upcoming: "bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800",
+  normal:   "",
+};
+
+const getVatUrgency = (vatPeriodEnd: string | null | undefined, status: string): LicenseUrgency => {
+  if (!vatPeriodEnd) return "normal";
+  if (status === "Completed" || status === "Filed") return "normal";
+  const parts = vatPeriodEnd.split("-");
+  const year = parseInt(parts[0]);
+  const month = parseInt(parts[1]);
+  const endDate = new Date(year, month, 0); // last day of the month
+  const days = Math.ceil((endDate.getTime() - Date.now()) / 86400000);
+  if (days < 0) return "expired";
+  if (days <= 5) return "critical";
+  if (days <= 15) return "warning";
+  if (days <= 30) return "upcoming";
+  return "normal";
+};
 
 const UK_TASK_DEFAULTS: ScheduleItem[] = [
   { taskName: "DATA Sourcing", days: ["Fri"] },
@@ -1194,6 +1216,14 @@ export default function Clients() {
                       ) : (
                         filteredClients.map((client) => {
                           const urgency = getLicenseUrgency(client.licenseExpiryDate);
+                          const q1Rec = getVatRecord(client.id, "Q1");
+                          const q2Rec = getVatRecord(client.id, "Q2");
+                          const q3Rec = getVatRecord(client.id, "Q3");
+                          const q4Rec = getVatRecord(client.id, "Q4");
+                          const vQ1 = (q1Rec && q1Rec.isActive !== "false") ? getVatUrgency(q1Rec.vatPeriodEnd, q1Rec.status || "") : "normal" as LicenseUrgency;
+                          const vQ2 = (q2Rec && q2Rec.isActive !== "false") ? getVatUrgency(q2Rec.vatPeriodEnd, q2Rec.status || "") : "normal" as LicenseUrgency;
+                          const vQ3 = (q3Rec && q3Rec.isActive !== "false") ? getVatUrgency(q3Rec.vatPeriodEnd, q3Rec.status || "") : "normal" as LicenseUrgency;
+                          const vQ4 = (q4Rec && q4Rec.isActive !== "false") ? getVatUrgency(q4Rec.vatPeriodEnd, q4Rec.status || "") : "normal" as LicenseUrgency;
                           return (
                           <TableRow key={client.id} data-testid={`row-client-${client.id}`} className={cn("transition-colors group", URGENCY_ROW[urgency])}>
                             <TableCell className={cn("font-medium sticky left-0 border-r z-10 group-hover:brightness-[0.97]", URGENCY_STICKY[urgency])}>
@@ -1247,16 +1277,16 @@ export default function Clients() {
                               )}
                             </TableCell>
 
-                            <TableCell className="bg-primary/5 border-l border-r border-border/30 text-center">
+                            <TableCell className={cn("border-l border-r text-center", vQ1 !== "normal" ? URGENCY_VAT_CELL[vQ1] : "bg-primary/5 border-border/30")}>
                               {getVatStatusBadge(client.id, "Q1")}
                             </TableCell>
-                            <TableCell className="border-r border-border/30 text-center">
+                            <TableCell className={cn("border-r text-center", vQ2 !== "normal" ? URGENCY_VAT_CELL[vQ2] : "border-border/30")}>
                               {getVatStatusBadge(client.id, "Q2")}
                             </TableCell>
-                            <TableCell className="bg-primary/5 border-r border-border/30 text-center">
+                            <TableCell className={cn("border-r text-center", vQ3 !== "normal" ? URGENCY_VAT_CELL[vQ3] : "bg-primary/5 border-border/30")}>
                               {getVatStatusBadge(client.id, "Q3")}
                             </TableCell>
-                            <TableCell className="border-r border-border/30 text-center">
+                            <TableCell className={cn("border-r text-center", vQ4 !== "normal" ? URGENCY_VAT_CELL[vQ4] : "border-border/30")}>
                               {getVatStatusBadge(client.id, "Q4")}
                             </TableCell>
 
