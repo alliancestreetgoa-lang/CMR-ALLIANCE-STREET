@@ -83,6 +83,38 @@ const setMonthValue = (month: string, existing: string) => {
   return `${year}-${month}`;
 };
 
+type LicenseUrgency = "expired" | "critical" | "warning" | "upcoming" | "normal";
+const getLicenseUrgency = (dateStr: string | null): LicenseUrgency => {
+  if (!dateStr) return "normal";
+  const days = Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000);
+  if (days < 0) return "expired";
+  if (days <= 5) return "critical";
+  if (days <= 15) return "warning";
+  if (days <= 30) return "upcoming";
+  return "normal";
+};
+const URGENCY_ROW: Record<LicenseUrgency, string> = {
+  expired:  "bg-red-50 dark:bg-red-950/20",
+  critical: "bg-red-50 dark:bg-red-950/20",
+  warning:  "bg-orange-50 dark:bg-orange-950/20",
+  upcoming: "bg-yellow-50 dark:bg-yellow-950/20",
+  normal:   "",
+};
+const URGENCY_STICKY: Record<LicenseUrgency, string> = {
+  expired:  "bg-red-50 dark:bg-red-950/20",
+  critical: "bg-red-50 dark:bg-red-950/20",
+  warning:  "bg-orange-50 dark:bg-orange-950/20",
+  upcoming: "bg-yellow-50 dark:bg-yellow-950/20",
+  normal:   "bg-background",
+};
+const URGENCY_TEXT: Record<LicenseUrgency, string> = {
+  expired:  "text-red-600 dark:text-red-400",
+  critical: "text-red-600 dark:text-red-400",
+  warning:  "text-orange-600 dark:text-orange-400",
+  upcoming: "text-amber-600 dark:text-amber-400",
+  normal:   "text-foreground",
+};
+
 const UK_TASK_DEFAULTS: ScheduleItem[] = [
   { taskName: "DATA Sourcing", days: ["Fri"] },
   { taskName: "DATA Entry", days: ["Mon", "Tue"] },
@@ -1160,9 +1192,11 @@ export default function Clients() {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        filteredClients.map((client) => (
-                          <TableRow key={client.id} data-testid={`row-client-${client.id}`} className="hover:bg-muted/30 transition-colors group">
-                            <TableCell className="font-medium sticky left-0 bg-background group-hover:bg-muted/30 border-r z-10">
+                        filteredClients.map((client) => {
+                          const urgency = getLicenseUrgency(client.licenseExpiryDate);
+                          return (
+                          <TableRow key={client.id} data-testid={`row-client-${client.id}`} className={cn("transition-colors group", URGENCY_ROW[urgency])}>
+                            <TableCell className={cn("font-medium sticky left-0 border-r z-10 group-hover:brightness-[0.97]", URGENCY_STICKY[urgency])}>
                               <div className="flex flex-col gap-1">
                                 <span className="font-semibold text-foreground truncate max-w-[200px]" title={client.companyName} data-testid={`text-company-${client.id}`}>
                                   {client.companyName}
@@ -1177,14 +1211,16 @@ export default function Clients() {
                               <div className="flex flex-col gap-1">
                                 {client.licenseExpiryDate ? (
                                   <>
-                                    <span className={cn(
-                                      "text-xs font-mono font-medium",
-                                      new Date(client.licenseExpiryDate) < new Date() ? "text-destructive" : "text-foreground"
-                                    )}>
+                                    <span className={cn("text-xs font-mono font-medium", URGENCY_TEXT[urgency])}>
                                       {format(new Date(client.licenseExpiryDate), "dd MMM yyyy")}
                                     </span>
-                                    {new Date(client.licenseExpiryDate) < new Date() && (
-                                       <span className="text-[10px] text-destructive font-bold">EXPIRED</span>
+                                    {urgency === "expired" && (
+                                       <span className="text-[10px] text-red-600 dark:text-red-400 font-bold">EXPIRED</span>
+                                    )}
+                                    {urgency !== "expired" && urgency !== "normal" && (
+                                       <span className={cn("text-[10px] font-semibold", URGENCY_TEXT[urgency])}>
+                                         {urgency === "critical" ? "Due in ≤5 days" : urgency === "warning" ? "Due in ≤15 days" : "Due in ≤30 days"}
+                                       </span>
                                     )}
                                   </>
                                 ) : (
@@ -1254,7 +1290,8 @@ export default function Clients() {
                               </TableCell>
                             )}
                           </TableRow>
-                        ))
+                          );
+                        })
                       )}
                     </TableBody>
                   </Table>
