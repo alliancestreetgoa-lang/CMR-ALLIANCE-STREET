@@ -137,6 +137,24 @@ export const insertUkScheduleSchema = createInsertSchema(ukWeeklySchedules).omit
 export type InsertUkSchedule = z.infer<typeof insertUkScheduleSchema>;
 export type UkWeeklySchedule = typeof ukWeeklySchedules.$inferSelect;
 
+// ===== CLIENT ACTIVITY LOGS =====
+export const clientActivityLogs = pgTable("client_activity_logs", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  clientId: integer("client_id").notNull(),
+  userId: integer("user_id").notNull(),
+  userName: text("user_name").notNull(),
+  action: text("action").notNull(),
+  field: text("field"),
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  description: text("description").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertClientActivityLogSchema = createInsertSchema(clientActivityLogs).omit({ id: true, createdAt: true });
+export type InsertClientActivityLog = z.infer<typeof insertClientActivityLogSchema>;
+export type ClientActivityLog = typeof clientActivityLogs.$inferSelect;
+
 // ===== DIRECT MESSAGES =====
 export const directMessages = pgTable("direct_messages", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),

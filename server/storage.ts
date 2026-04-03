@@ -2,7 +2,7 @@ import { db, pool } from "./db";
 import { eq, and, desc, asc, or, sql } from "drizzle-orm";
 import {
   users, clients, vatRecords, tasks, auditLogs, notifications, directMessages,
-  attendanceRecords, salaryProfiles, salarySlips, ukWeeklySchedules,
+  attendanceRecords, salaryProfiles, salarySlips, ukWeeklySchedules, clientActivityLogs,
   type User, type InsertUser,
   type Client, type InsertClient,
   type VatRecord, type InsertVatRecord,
@@ -14,6 +14,7 @@ import {
   type SalaryProfile, type InsertSalaryProfile,
   type SalarySlip, type InsertSalarySlip,
   type UkWeeklySchedule, type InsertUkSchedule,
+  type ClientActivityLog, type InsertClientActivityLog,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -50,6 +51,10 @@ export interface IStorage {
   // Audit Logs
   getAuditLogs(): Promise<AuditLog[]>;
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
+
+  // Client Activity Logs
+  getClientActivityLogs(clientId: number): Promise<ClientActivityLog[]>;
+  createClientActivityLog(log: InsertClientActivityLog): Promise<ClientActivityLog>;
 
   // Notifications
   getNotificationsByUser(userId: number): Promise<Notification[]>;
@@ -219,6 +224,18 @@ export class DatabaseStorage implements IStorage {
 
   async createAuditLog(log: InsertAuditLog) {
     const [created] = await db.insert(auditLogs).values(log).returning();
+    return created;
+  }
+
+  // Client Activity Logs
+  async getClientActivityLogs(clientId: number) {
+    return db.select().from(clientActivityLogs)
+      .where(eq(clientActivityLogs.clientId, clientId))
+      .orderBy(desc(clientActivityLogs.createdAt));
+  }
+
+  async createClientActivityLog(log: InsertClientActivityLog) {
+    const [created] = await db.insert(clientActivityLogs).values(log).returning();
     return created;
   }
 
