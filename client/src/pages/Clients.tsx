@@ -1140,7 +1140,7 @@ export default function Clients() {
                       ) : (
                         filteredClients.map((client) => (
                           <TableRow key={client.id} data-testid={`row-client-${client.id}`} className="hover:bg-muted/30 transition-colors group">
-                            <TableCell className="font-medium sticky left-0 bg-background group-hover:bg-muted/30 border-r z-10 align-top">
+                            <TableCell className="font-medium sticky left-0 bg-background group-hover:bg-muted/30 border-r z-10">
                               <div className="flex flex-col gap-1">
                                 <span className="font-semibold text-foreground truncate max-w-[200px]" title={client.companyName} data-testid={`text-company-${client.id}`}>
                                   {client.companyName}
@@ -1151,7 +1151,7 @@ export default function Clients() {
                               </div>
                             </TableCell>
 
-                            <TableCell className="align-top">
+                            <TableCell className="">
                               <div className="flex flex-col gap-1">
                                 {client.licenseExpiryDate ? (
                                   <>
@@ -1171,7 +1171,7 @@ export default function Clients() {
                               </div>
                             </TableCell>
 
-                            <TableCell className="align-top">
+                            <TableCell className="">
                                <div className="text-xs">
                                  <span className="text-muted-foreground">Start:</span> {client.corporateTaxStartMonth || "-"}
                                  <br />
@@ -1179,7 +1179,7 @@ export default function Clients() {
                                </div>
                             </TableCell>
 
-                            <TableCell className="align-top">
+                            <TableCell className="">
                               {client.corporateTaxDueDate ? (
                                 <span className="text-xs font-mono text-foreground">
                                   {format(new Date(client.corporateTaxDueDate), "dd MMM yyyy")}
@@ -1189,21 +1189,21 @@ export default function Clients() {
                               )}
                             </TableCell>
 
-                            <TableCell className="align-top bg-primary/5 border-l border-r border-border/30">
+                            <TableCell className="bg-primary/5 border-l border-r border-border/30">
                               {getVatStatusBadge(client.id, "Q1")}
                             </TableCell>
-                            <TableCell className="align-top border-r border-border/30">
+                            <TableCell className="border-r border-border/30">
                               {getVatStatusBadge(client.id, "Q2")}
                             </TableCell>
-                            <TableCell className="align-top bg-primary/5 border-r border-border/30">
+                            <TableCell className="bg-primary/5 border-r border-border/30">
                               {getVatStatusBadge(client.id, "Q3")}
                             </TableCell>
-                            <TableCell className="align-top border-r border-border/30">
+                            <TableCell className="border-r border-border/30">
                               {getVatStatusBadge(client.id, "Q4")}
                             </TableCell>
 
                             {canManageClients && (
-                              <TableCell className="text-right sticky right-0 bg-background group-hover:bg-muted/30 z-10 align-top">
+                              <TableCell className="text-right sticky right-0 bg-background group-hover:bg-muted/30 z-10">
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" className="h-8 w-8 p-0" data-testid={`button-actions-${client.id}`}>
