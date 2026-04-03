@@ -1285,6 +1285,106 @@ Consider:
     }
   });
 
+  // ===== AI - CLIENT INSIGHTS =====
+
+  app.post("/api/ai/client-insights", authenticate, requireRole("super_admin", "admin"), async (req, res) => {
+    try {
+      const apiKey = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+      const baseURL = process.env.OPENAI_API_KEY ? undefined : process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+
+      if (!apiKey) {
+        return res.status(400).json({ message: "OpenAI API key is not configured" });
+      }
+
+      const openaiClient = new OpenAI({ apiKey, baseURL });
+
+      const [allClients, allVat] = await Promise.all([
+        storage.getClients(),
+        storage.getVatRecords(),
+      ]);
+
+      const today = new Date();
+      const todayStr = today.toISOString().split("T")[0];
+
+      const vatMap: Record<number, typeof allVat> = {};
+      for (const v of allVat) {
+        if (!vatMap[v.clientId]) vatMap[v.clientId] = [];
+        vatMap[v.clientId].push(v);
+      }
+
+      const clientSummaries = allClients.map(c => {
+        const vats = vatMap[c.id] || [];
+        const overdueVats = vats.filter(v => v.status === "Overdue").map(v => v.vatQuarter);
+        const notStartedVats = vats.filter(v => v.status === "Not Started" && v.isActive !== "false").map(v => v.vatQuarter);
+        let licenseStatus = "No license date";
+        if (c.licenseExpiryDate) {
+          const expiry = new Date(c.licenseExpiryDate);
+          const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          if (daysUntilExpiry < 0) licenseStatus = `EXPIRED ${Math.abs(daysUntilExpiry)} days ago`;
+          else if (daysUntilExpiry <= 30) licenseStatus = `Expiring in ${daysUntilExpiry} days`;
+          else licenseStatus = `Valid (${daysUntilExpiry} days remaining)`;
+        }
+        return {
+          id: c.id,
+          name: c.companyName,
+          country: c.country,
+          status: c.status,
+          licenseStatus,
+          overdueVatQuarters: overdueVats,
+          notStartedVatQuarters: notStartedVats,
+          corporateTaxDueDate: c.corporateTaxDueDate || "N/A",
+        };
+      });
+
+      const prompt = `You are a compliance advisor for Alliance Street Accounting. Today is ${todayStr}.
+
+Analyze these ${allClients.length} clients and provide compliance insights:
+
+${JSON.stringify(clientSummaries, null, 2)}
+
+Provide a JSON response with this exact structure:
+{
+  "summary": "1-2 sentence overview of overall client compliance health",
+  "atRiskClients": [
+    {
+      "clientId": <number>,
+      "clientName": "<string>",
+      "riskLevel": "High" | "Medium" | "Low",
+      "issues": ["issue 1", "issue 2"]
+    }
+  ],
+  "insights": [
+    "Key observation about compliance trends"
+  ],
+  "recommendations": [
+    "Actionable recommendation for the team"
+  ]
+}
+
+Focus on:
+- Overdue VAT filings (highest risk)
+- Expired or soon-expiring licenses (within 30 days)
+- Inactive clients with pending compliance
+- UK vs UAE regulatory differences
+- Clients with no VAT tracking started
+Only include clients with actual issues in atRiskClients. Keep insights and recommendations concise and actionable. Limit atRiskClients to top 8 most urgent.`;
+
+      const response = await openaiClient.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" },
+        max_tokens: 2000,
+      });
+
+      const content = response.choices[0]?.message?.content || "{}";
+      const parsed = JSON.parse(content);
+      res.json(parsed);
+    } catch (err: any) {
+      console.error("AI client insights error:", err);
+      res.status(500).json({ message: "Failed to get AI insights: " + err.message });
+    }
+  });
+
   // ===== HR - ATTENDANCE =====
 
   app.get("/api/hr/attendance", authenticate, requireRole("super_admin"), async (req, res) => {

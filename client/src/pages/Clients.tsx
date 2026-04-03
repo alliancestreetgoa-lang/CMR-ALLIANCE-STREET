@@ -38,7 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { MoreHorizontal, Plus, Download, Search, Loader2, Trash2, Building2, CircleCheck, CircleMinus, Globe } from "lucide-react";
+import { MoreHorizontal, Plus, Download, Search, Loader2, Trash2, Building2, CircleCheck, CircleMinus, Globe, Sparkles, ChevronDown, ChevronUp, Lightbulb, AlertTriangle, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -190,6 +190,31 @@ export default function Clients() {
   const [clients, setClients] = useState<Client[]>([]);
   const [vatRecords, setVatRecords] = useState<VatRecord[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResult, setAiResult] = useState<{
+    summary: string;
+    atRiskClients: Array<{ clientId: number; clientName: string; riskLevel: "High" | "Medium" | "Low"; issues: string[] }>;
+    insights: string[];
+    recommendations: string[];
+  } | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  async function fetchAiInsights() {
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const result = await api.post("/api/ai/client-insights", {});
+      setAiResult(result);
+      setAiPanelOpen(true);
+    } catch (err: any) {
+      setAiError(err.message || "Failed to get AI insights");
+      toast({ title: "AI Error", description: err.message || "Failed to get AI insights", variant: "destructive" });
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
@@ -640,7 +665,20 @@ export default function Clients() {
             <h1 className="text-3xl font-heading font-bold tracking-tight text-foreground">Client Management</h1>
             <p className="text-muted-foreground">Detailed compliance tracking view.</p>
           </div>
-          {canManageClients && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {canManageClients && (
+              <Button
+                variant="outline"
+                onClick={fetchAiInsights}
+                disabled={aiLoading}
+                className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800 dark:border-purple-800 dark:text-purple-400 dark:hover:bg-purple-950"
+                data-testid="button-ai-insights"
+              >
+                {aiLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                AI Insights
+              </Button>
+            )}
+            {canManageClients && (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button data-testid="button-add-client" className="shadow-lg shadow-primary/20 transition-all hover:scale-105">
@@ -835,6 +873,7 @@ export default function Clients() {
             </Dialog>
           )}
         </div>
+        </div>
 
         {/* Summary stat cards */}
         {!loading && (
@@ -883,6 +922,103 @@ export default function Clients() {
                 </Card>
               );
             })}
+          </div>
+        )}
+
+        {/* AI Insights Panel */}
+        {aiResult && (
+          <div className="rounded-lg border border-purple-200 bg-purple-50/60 dark:border-purple-800 dark:bg-purple-950/30 overflow-hidden">
+            <button
+              className="w-full px-4 py-3 flex items-center justify-between text-left"
+              onClick={() => setAiPanelOpen(!aiPanelOpen)}
+              data-testid="button-toggle-ai-panel"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
+                  <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm text-purple-900 dark:text-purple-100">AI Compliance Insights</h3>
+                  <p className="text-xs text-purple-600 dark:text-purple-400">{aiResult.summary}</p>
+                </div>
+              </div>
+              {aiPanelOpen
+                ? <ChevronUp className="h-4 w-4 text-purple-400 shrink-0" />
+                : <ChevronDown className="h-4 w-4 text-purple-400 shrink-0" />}
+            </button>
+
+            {aiPanelOpen && (
+              <div className="px-4 pb-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {aiResult.atRiskClients && aiResult.atRiskClients.length > 0 && (
+                    <div className="bg-white/60 dark:bg-black/20 rounded-lg p-3 border border-purple-100 dark:border-purple-800">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle className="h-3.5 w-3.5 text-orange-500" />
+                        <span className="text-xs font-semibold text-purple-900 dark:text-purple-100">At-Risk Clients</span>
+                      </div>
+                      <ul className="space-y-2">
+                        {aiResult.atRiskClients.map((c) => (
+                          <li key={c.clientId} className="text-xs text-purple-800 dark:text-purple-200">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className={cn(
+                                "inline-flex h-1.5 w-1.5 rounded-full shrink-0",
+                                c.riskLevel === "High" ? "bg-red-500" : c.riskLevel === "Medium" ? "bg-orange-400" : "bg-yellow-400"
+                              )} />
+                              <span className="font-medium">{c.clientName}</span>
+                              <span className={cn(
+                                "text-[10px] px-1 rounded",
+                                c.riskLevel === "High" ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" :
+                                c.riskLevel === "Medium" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" :
+                                "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
+                              )}>{c.riskLevel}</span>
+                            </div>
+                            <ul className="ml-3 space-y-0.5">
+                              {c.issues.map((issue, i) => (
+                                <li key={i} className="text-purple-600 dark:text-purple-400 flex items-start gap-1">
+                                  <span className="shrink-0 mt-0.5">-</span>{issue}
+                                </li>
+                              ))}
+                            </ul>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  <div className="space-y-3">
+                    {aiResult.insights && aiResult.insights.length > 0 && (
+                      <div className="bg-white/60 dark:bg-black/20 rounded-lg p-3 border border-purple-100 dark:border-purple-800">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Lightbulb className="h-3.5 w-3.5 text-purple-500" />
+                          <span className="text-xs font-semibold text-purple-900 dark:text-purple-100">Key Insights</span>
+                        </div>
+                        <ul className="space-y-1">
+                          {aiResult.insights.map((insight, i) => (
+                            <li key={i} className="text-xs text-purple-700 dark:text-purple-300 flex items-start gap-1.5">
+                              <span className="text-purple-400 mt-0.5 shrink-0">-</span>{insight}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {aiResult.recommendations && aiResult.recommendations.length > 0 && (
+                      <div className="bg-white/60 dark:bg-black/20 rounded-lg p-3 border border-purple-100 dark:border-purple-800">
+                        <div className="flex items-center gap-2 mb-2">
+                          <ShieldCheck className="h-3.5 w-3.5 text-green-600" />
+                          <span className="text-xs font-semibold text-purple-900 dark:text-purple-100">Recommendations</span>
+                        </div>
+                        <ul className="space-y-1">
+                          {aiResult.recommendations.map((rec, i) => (
+                            <li key={i} className="text-xs text-purple-700 dark:text-purple-300 flex items-start gap-1.5">
+                              <span className="text-green-500 mt-0.5 shrink-0">-</span>{rec}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
