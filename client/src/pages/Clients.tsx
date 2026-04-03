@@ -76,6 +76,12 @@ type VatRecord = {
 type ScheduleItem = { taskName: string; days: string[] };
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const getMonthValue = (ym: string) => ym ? ym.substring(5, 7) : "";
+const setMonthValue = (month: string, existing: string) => {
+  const year = existing ? existing.substring(0, 4) : new Date().getFullYear().toString();
+  return `${year}-${month}`;
+};
 
 const UK_TASK_DEFAULTS: ScheduleItem[] = [
   { taskName: "DATA Sourcing", days: ["Fri"] },
@@ -739,8 +745,24 @@ export default function Clients() {
                         return (
                           <div key={q} className="grid grid-cols-[60px_1fr_1fr_auto] gap-2 items-center">
                             <Label className="text-xs text-muted-foreground">{q}</Label>
-                            <Input data-testid={`input-vat-${q.toLowerCase()}-start`} type="month" placeholder="Start" value={(formData[startKey] as string)?.substring(0, 7) || ""} onChange={(e) => setFormData({ ...formData, [startKey]: e.target.value })} disabled={!isActive} />
-                            <Input data-testid={`input-vat-${q.toLowerCase()}-end`} type="month" placeholder="End" value={(formData[endKey] as string)?.substring(0, 7) || ""} onChange={(e) => setFormData({ ...formData, [endKey]: e.target.value })} disabled={!isActive} />
+                            <Select
+                              data-testid={`input-vat-${q.toLowerCase()}-start`}
+                              value={getMonthValue((formData[startKey] as string) || "")}
+                              onValueChange={(m) => setFormData({ ...formData, [startKey]: setMonthValue(m, (formData[startKey] as string) || "") })}
+                              disabled={!isActive}
+                            >
+                              <SelectTrigger><SelectValue placeholder="Start" /></SelectTrigger>
+                              <SelectContent>{MONTHS.map((name, i) => <SelectItem key={name} value={String(i+1).padStart(2,"0")}>{name}</SelectItem>)}</SelectContent>
+                            </Select>
+                            <Select
+                              data-testid={`input-vat-${q.toLowerCase()}-end`}
+                              value={getMonthValue((formData[endKey] as string) || "")}
+                              onValueChange={(m) => setFormData({ ...formData, [endKey]: setMonthValue(m, (formData[endKey] as string) || "") })}
+                              disabled={!isActive}
+                            >
+                              <SelectTrigger><SelectValue placeholder="End" /></SelectTrigger>
+                              <SelectContent>{MONTHS.map((name, i) => <SelectItem key={name} value={String(i+1).padStart(2,"0")}>{name}</SelectItem>)}</SelectContent>
+                            </Select>
                             <Button
                               type="button"
                               size="sm"
@@ -1323,22 +1345,20 @@ export default function Clients() {
                       <Label className="text-sm text-muted-foreground w-6 shrink-0">{q}</Label>
                       {isActive ? (
                         <>
-                          <Input
-                            data-testid={`input-edit-vat-${q.toLowerCase()}-start`}
-                            type="month"
-                            placeholder="Start"
-                            value={(editFormData[startKey] as string)?.substring(0, 7) || ""}
-                            onChange={e => setEditFormData({ ...editFormData, [startKey]: e.target.value })}
-                            className="flex-1 text-sm"
-                          />
-                          <Input
-                            data-testid={`input-edit-vat-${q.toLowerCase()}-end`}
-                            type="month"
-                            placeholder="End"
-                            value={(editFormData[endKey] as string)?.substring(0, 7) || ""}
-                            onChange={e => setEditFormData({ ...editFormData, [endKey]: e.target.value })}
-                            className="flex-1 text-sm"
-                          />
+                          <Select
+                            value={getMonthValue((editFormData[startKey] as string) || "")}
+                            onValueChange={(m) => setEditFormData({ ...editFormData, [startKey]: setMonthValue(m, (editFormData[startKey] as string) || "") })}
+                          >
+                            <SelectTrigger data-testid={`input-edit-vat-${q.toLowerCase()}-start`} className="flex-1 text-sm"><SelectValue placeholder="Start" /></SelectTrigger>
+                            <SelectContent>{MONTHS.map((name, i) => <SelectItem key={name} value={String(i+1).padStart(2,"0")}>{name}</SelectItem>)}</SelectContent>
+                          </Select>
+                          <Select
+                            value={getMonthValue((editFormData[endKey] as string) || "")}
+                            onValueChange={(m) => setEditFormData({ ...editFormData, [endKey]: setMonthValue(m, (editFormData[endKey] as string) || "") })}
+                          >
+                            <SelectTrigger data-testid={`input-edit-vat-${q.toLowerCase()}-end`} className="flex-1 text-sm"><SelectValue placeholder="End" /></SelectTrigger>
+                            <SelectContent>{MONTHS.map((name, i) => <SelectItem key={name} value={String(i+1).padStart(2,"0")}>{name}</SelectItem>)}</SelectContent>
+                          </Select>
                           <Button
                             type="button"
                             size="sm"
