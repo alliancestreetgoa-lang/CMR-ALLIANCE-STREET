@@ -1322,7 +1322,7 @@ export async function registerRoutes(
 
 Analyze these active tasks and provide prioritization suggestions:
 
-${JSON.stringify(taskSummaries, null, 2)}
+${JSON.stringify(taskSummaries)}
 ${vatContext}
 
 Provide a JSON response with this exact structure:
@@ -1350,10 +1350,10 @@ Consider:
 - Overdue tasks are highest priority`;
 
       const response = await openaiClient.chat.completions.create({
-        model: "gpt-5-mini",
+        model: "gpt-4o-mini",
         messages: [{ role: "user", content: prompt }],
         response_format: { type: "json_object" },
-        max_completion_tokens: 2000,
+        max_tokens: 2000,
       });
 
       const content = response.choices[0]?.message?.content || "{}";
@@ -1361,7 +1361,7 @@ Consider:
 
       res.json(parsed);
     } catch (err: any) {
-      console.error("AI prioritization error:", err);
+      console.error("AI prioritization error:", err.message || err);
       res.status(500).json({ message: "Failed to get AI suggestions: " + err.message });
     }
   });
@@ -1421,7 +1421,7 @@ Consider:
 
 Analyze these ${allClients.length} clients and provide compliance insights:
 
-${JSON.stringify(clientSummaries, null, 2)}
+${JSON.stringify(clientSummaries)}
 
 Provide a JSON response with this exact structure:
 {
@@ -1451,17 +1451,17 @@ Focus on:
 Only include clients with actual issues in atRiskClients. Keep insights and recommendations concise and actionable. Limit atRiskClients to top 8 most urgent.`;
 
       const response = await openaiClient.chat.completions.create({
-        model: "gpt-5-mini",
+        model: "gpt-4o-mini",
         messages: [{ role: "user", content: prompt }],
         response_format: { type: "json_object" },
-        max_completion_tokens: 2000,
+        max_tokens: 2000,
       });
 
       const content = response.choices[0]?.message?.content || "{}";
       const parsed = JSON.parse(content);
       res.json(parsed);
     } catch (err: any) {
-      console.error("AI client insights error:", err);
+      console.error("AI client insights error:", err.message || err);
       res.status(500).json({ message: "Failed to get AI insights: " + err.message });
     }
   });
@@ -1518,22 +1518,22 @@ Only include clients with actual issues in atRiskClients. Keep insights and reco
 You have access to ${allClients.length} client records shown below.
 
 CLIENT DATA:
-${JSON.stringify(clientSummaries, null, 2)}
+${JSON.stringify(clientSummaries)}
 
-Answer the following question using the client data above. Be specific — name actual clients, quote numbers, and give concrete answers. Write in plain, easy-to-read text. Use bullet points only when listing multiple items.
+Answer the following question using the client data above. Be specific — name actual clients, quote numbers, and give concrete answers. Write in plain, easy-to-read text. Use bullet points only when listing multiple items. Keep your answer under 400 words.
 
 Question: ${question.trim()}`;
 
       const response = await openaiClient.chat.completions.create({
-        model: "gpt-5-mini",
+        model: "gpt-4o-mini",
         messages: [{ role: "user", content: prompt }],
-        max_completion_tokens: 1000,
+        max_tokens: 1000,
       });
 
       const answer = response.choices[0]?.message?.content?.trim() || "I could not generate an answer.";
       res.json({ answer });
     } catch (err: any) {
-      console.error("AI client query error:", err);
+      console.error("AI client query error:", err.message || err);
       res.status(500).json({ message: "Failed to query AI: " + err.message });
     }
   });
