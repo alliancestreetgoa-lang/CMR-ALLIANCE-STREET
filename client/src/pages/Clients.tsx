@@ -387,7 +387,7 @@ export default function Clients() {
     const record = getVatRecord(clientId, quarter);
 
     if (!record || record.isActive === "false") {
-      return <span className="text-xs text-muted-foreground">—</span>;
+      return <span className="text-xs text-muted-foreground flex justify-center">—</span>;
     }
 
     const status = record?.status || "Not Started";
@@ -406,8 +406,8 @@ export default function Clients() {
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex flex-col gap-0.5 min-w-[100px] text-left cursor-pointer hover:bg-muted/50 rounded p-1 -m-1 transition-colors" data-testid={`vat-status-${clientId}-${quarter}`}>
-              <span className="text-[10px] font-medium text-muted-foreground">
+            <button className="flex flex-col items-center gap-0.5 w-full cursor-pointer hover:bg-muted/50 rounded p-1 -m-1 transition-colors" data-testid={`vat-status-${clientId}-${quarter}`}>
+              <span className="text-[10px] font-medium text-muted-foreground text-center">
                 {periodLabel}
               </span>
               <StatusBadge status={status} variant={variant} className="w-fit text-[10px] px-1.5 h-5" />
@@ -432,8 +432,8 @@ export default function Clients() {
     }
 
     return (
-      <div className="flex flex-col gap-0.5 min-w-[100px]">
-        <span className="text-[10px] font-medium text-muted-foreground">{periodLabel}</span>
+      <div className="flex flex-col items-center gap-0.5 w-full">
+        <span className="text-[10px] font-medium text-muted-foreground text-center">{periodLabel}</span>
         <StatusBadge status={status} variant={variant} className="w-fit text-[10px] px-1.5 h-5" />
       </div>
     );
@@ -1123,10 +1123,10 @@ export default function Clients() {
                         <TableHead className="min-w-[140px]">License Expiry</TableHead>
                         <TableHead className="min-w-[180px]">Corporate Tax Period</TableHead>
                         <TableHead className="min-w-[140px]">Tax Due Date</TableHead>
-                        <TableHead className="min-w-[140px] bg-primary/5">VAT Period Q1</TableHead>
-                        <TableHead className="min-w-[140px]">VAT Period Q2</TableHead>
-                        <TableHead className="min-w-[140px] bg-primary/5">VAT Period Q3</TableHead>
-                        <TableHead className="min-w-[140px]">VAT Period Q4</TableHead>
+                        <TableHead className="min-w-[140px] bg-primary/5 text-center">VAT Period Q1</TableHead>
+                        <TableHead className="min-w-[140px] text-center">VAT Period Q2</TableHead>
+                        <TableHead className="min-w-[140px] bg-primary/5 text-center">VAT Period Q3</TableHead>
+                        <TableHead className="min-w-[140px] text-center">VAT Period Q4</TableHead>
                         {canManageClients && <TableHead className="text-right w-[50px] sticky right-0 bg-muted/95 z-10"></TableHead>}
                       </TableRow>
                     </TableHeader>
@@ -1189,16 +1189,16 @@ export default function Clients() {
                               )}
                             </TableCell>
 
-                            <TableCell className="bg-primary/5 border-l border-r border-border/30">
+                            <TableCell className="bg-primary/5 border-l border-r border-border/30 text-center">
                               {getVatStatusBadge(client.id, "Q1")}
                             </TableCell>
-                            <TableCell className="border-r border-border/30">
+                            <TableCell className="border-r border-border/30 text-center">
                               {getVatStatusBadge(client.id, "Q2")}
                             </TableCell>
-                            <TableCell className="bg-primary/5 border-r border-border/30">
+                            <TableCell className="bg-primary/5 border-r border-border/30 text-center">
                               {getVatStatusBadge(client.id, "Q3")}
                             </TableCell>
-                            <TableCell className="border-r border-border/30">
+                            <TableCell className="border-r border-border/30 text-center">
                               {getVatStatusBadge(client.id, "Q4")}
                             </TableCell>
 
