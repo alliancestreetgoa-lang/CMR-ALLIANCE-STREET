@@ -490,6 +490,29 @@ export async function registerRoutes(
     }
   });
 
+  // Helper: human-readable labels for client fields
+  const CLIENT_FIELD_LABELS: Record<string, string> = {
+    companyName: "Company Name", country: "Country", contactPerson: "Contact Person",
+    email: "Email", phone: "Phone", vatNumber: "VAT Number",
+    licenseExpiryDate: "License Expiry Date", corporateTaxStatus: "Corporate Tax Status",
+    corporateTaxStartMonth: "Corp. Tax Start Month", corporateTaxEndMonth: "Corp. Tax End Month",
+    corporateTaxDueDate: "Corp. Tax Due Date", status: "Status",
+    plMonthly: "P&L Monthly", plMonthlyDate: "P&L Monthly Date",
+    plQuarterly: "P&L Quarterly", plQuarterlyDate: "P&L Quarterly Date",
+    vatQuarterlyUk: "VAT Quarterly (UK)", vatQuarterlyDraft1Date: "VAT Draft 1 Date",
+    vatQuarterlyDraft2Date: "VAT Draft 2 Date", vatQuarterlySubmitDate: "VAT Submit Date",
+  };
+
+  app.get("/api/clients/:id/activity", authenticate, async (req, res) => {
+    try {
+      const clientId = parseInt(req.params.id);
+      const logs = await storage.getClientActivityLogs(clientId);
+      res.json(logs);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
   app.post("/api/clients", authenticate, requireRole("super_admin", "admin"), async (req, res) => {
     try {
       const { vatPeriods, ...clientData } = req.body;
@@ -523,6 +546,14 @@ export async function registerRoutes(
         description: `Created client ${client.companyName} with auto-generated VAT quarters.`,
       });
 
+      await storage.createClientActivityLog({
+        clientId: client.id,
+        userId: req.user!.userId,
+        userName: req.user!.email,
+        action: "Created",
+        description: `Client "${client.companyName}" was created.`,
+      });
+
       res.status(201).json(client);
     } catch (err: any) {
       res.status(500).json({ message: err.message });
@@ -532,6 +563,9 @@ export async function registerRoutes(
   app.patch("/api/clients/:id", authenticate, requireRole("super_admin", "admin"), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const existing = await storage.getClient(id);
+      if (!existing) return res.status(404).json({ message: "Client not found" });
+
       const updated = await storage.updateClient(id, req.body);
       if (!updated) return res.status(404).json({ message: "Client not found" });
 
@@ -540,6 +574,26 @@ export async function registerRoutes(
         actionType: "UPDATE",
         description: `Updated client ${updated.companyName}.`,
       });
+
+      // Log each changed field individually
+      for (const key of Object.keys(req.body)) {
+        const label = CLIENT_FIELD_LABELS[key];
+        if (!label) continue;
+        const oldVal = String((existing as any)[key] ?? "");
+        const newVal = String((req.body as any)[key] ?? "");
+        if (oldVal !== newVal) {
+          await storage.createClientActivityLog({
+            clientId: id,
+            userId: req.user!.userId,
+            userName: req.user!.email,
+            action: "Updated",
+            field: label,
+            oldValue: oldVal,
+            newValue: newVal,
+            description: `"${label}" changed from "${oldVal}" to "${newVal}".`,
+          });
+        }
+      }
 
       res.json(updated);
     } catch (err: any) {
@@ -552,6 +606,14 @@ export async function registerRoutes(
       const id = parseInt(req.params.id);
       const client = await storage.getClient(id);
       if (!client) return res.status(404).json({ message: "Client not found" });
+
+      await storage.createClientActivityLog({
+        clientId: id,
+        userId: req.user!.userId,
+        userName: req.user!.email,
+        action: "Deleted",
+        description: `Client "${client.companyName}" was deleted.`,
+      });
 
       await storage.deleteClient(id);
 
@@ -584,8 +646,27 @@ export async function registerRoutes(
         return res.status(403).json({ message: "Only admins can update VAT records" });
       }
       const id = parseInt(req.params.id);
+      // Fetch existing record to compare status
+      const existingRecords = await storage.getVatRecords();
+      const existing = existingRecords.find(r => r.id === id);
+
       const updated = await storage.updateVatRecord(id, req.body);
       if (!updated) return res.status(404).json({ message: "VAT record not found" });
+
+      // Log VAT status change if status changed
+      if (existing && req.body.status && existing.status !== req.body.status) {
+        await storage.createClientActivityLog({
+          clientId: updated.clientId,
+          userId: req.user!.userId,
+          userName: req.user!.email,
+          action: "VAT Updated",
+          field: `VAT ${updated.vatQuarter} Status`,
+          oldValue: existing.status,
+          newValue: req.body.status,
+          description: `VAT ${updated.vatQuarter} status changed from "${existing.status}" to "${req.body.status}".`,
+        });
+      }
+
       res.json(updated);
     } catch (err: any) {
       res.status(500).json({ message: err.message });

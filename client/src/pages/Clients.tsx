@@ -38,7 +38,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { MoreHorizontal, Plus, Download, Search, Loader2, Trash2, Building2, CircleCheck, CircleMinus, Globe, Sparkles, ChevronDown, ChevronUp, Lightbulb, AlertTriangle, ShieldCheck, Send, MessageSquare, X } from "lucide-react";
+import { MoreHorizontal, Plus, Download, Search, Loader2, Trash2, Building2, CircleCheck, CircleMinus, Globe, Sparkles, ChevronDown, ChevronUp, Lightbulb, AlertTriangle, ShieldCheck, Send, MessageSquare, X, History, Clock, User, ArrowRight } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -321,6 +322,32 @@ export default function Clients() {
 
   const [addSchedule, setAddSchedule] = useState<ScheduleItem[]>(freshSchedule());
   const [editSchedule, setEditSchedule] = useState<ScheduleItem[]>(freshSchedule());
+
+  // History panel state
+  type ActivityLog = {
+    id: number; clientId: number; userId: number; userName: string;
+    action: string; field: string | null; oldValue: string | null;
+    newValue: string | null; description: string; createdAt: string;
+  };
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyClient, setHistoryClient] = useState<Client | null>(null);
+  const [historyLogs, setHistoryLogs] = useState<ActivityLog[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const openHistory = async (client: Client) => {
+    setHistoryClient(client);
+    setHistoryOpen(true);
+    setHistoryLogs([]);
+    setHistoryLoading(true);
+    try {
+      const logs = await api.get(`/api/clients/${client.id}/activity`);
+      setHistoryLogs(logs);
+    } catch {
+      setHistoryLogs([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   // When Add dialog opens, default country to user's only allowed country
   useEffect(() => {
@@ -1409,6 +1436,9 @@ export default function Clients() {
                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                     <DropdownMenuItem onClick={() => openViewDetails(client)} data-testid={`button-view-${client.id}`}>View Details</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => openEditDialog(client)} data-testid={`button-edit-${client.id}`}>Edit Client</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => openHistory(client)} data-testid={`button-history-${client.id}`}>
+                                      <History className="mr-2 h-4 w-4" /> View History
+                                    </DropdownMenuItem>
                                     {user?.role === "super_admin" && (
                                       <>
                                         <DropdownMenuSeparator />
@@ -1739,6 +1769,89 @@ export default function Clients() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Client Activity History Sheet */}
+      <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-lg flex flex-col">
+          <SheetHeader className="pb-4 border-b border-border/40">
+            <SheetTitle className="flex items-center gap-2 text-base">
+              <History className="h-4 w-4 text-muted-foreground" />
+              Activity History
+            </SheetTitle>
+            {historyClient && (
+              <p className="text-sm text-muted-foreground">{historyClient.companyName}</p>
+            )}
+          </SheetHeader>
+
+          <div className="flex-1 overflow-y-auto py-4">
+            {historyLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : historyLogs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
+                <Clock className="h-8 w-8 text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
+                <p className="text-xs text-muted-foreground/60">Changes made to this client will appear here.</p>
+              </div>
+            ) : (
+              <div className="relative">
+                {/* Timeline vertical line */}
+                <div className="absolute left-5 top-2 bottom-2 w-px bg-border/60" />
+                <div className="flex flex-col gap-0">
+                  {historyLogs.map((log, idx) => {
+                    const actionColor =
+                      log.action === "Created" ? "bg-green-500" :
+                      log.action === "Deleted" ? "bg-destructive" :
+                      log.action === "VAT Updated" ? "bg-blue-500" :
+                      "bg-primary";
+                    return (
+                      <div key={log.id} className="flex gap-4 pl-2 pb-5">
+                        {/* Dot */}
+                        <div className="relative z-10 flex-shrink-0 mt-1">
+                          <div className={cn("h-3 w-3 rounded-full border-2 border-background", actionColor)} />
+                        </div>
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2 flex-wrap">
+                            <span className={cn(
+                              "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium",
+                              log.action === "Created" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" :
+                              log.action === "Deleted" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
+                              log.action === "VAT Updated" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" :
+                              "bg-muted text-muted-foreground"
+                            )}>
+                              {log.action}
+                            </span>
+                            <span className="text-xs text-muted-foreground/70 whitespace-nowrap">
+                              {format(new Date(log.createdAt), "dd MMM yyyy, HH:mm")}
+                            </span>
+                          </div>
+                          {log.field && log.oldValue !== null && log.newValue !== null ? (
+                            <div className="mt-1.5">
+                              <p className="text-xs font-medium text-foreground">{log.field}</p>
+                              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                <span className="text-xs text-muted-foreground line-through">{log.oldValue || "(empty)"}</span>
+                                <ArrowRight className="h-3 w-3 text-muted-foreground/50 flex-shrink-0" />
+                                <span className="text-xs text-foreground font-medium">{log.newValue || "(empty)"}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="mt-1 text-xs text-muted-foreground">{log.description}</p>
+                          )}
+                          <div className="flex items-center gap-1 mt-1.5">
+                            <User className="h-3 w-3 text-muted-foreground/50" />
+                            <span className="text-xs text-muted-foreground/60">{log.userName}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </DashboardLayout>
   );
 }
