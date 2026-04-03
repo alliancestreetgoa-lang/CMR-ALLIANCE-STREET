@@ -443,7 +443,7 @@ export default function Clients() {
     }
   };
 
-  const getVatStatusBadge = (clientId: number, quarter: "Q1" | "Q2" | "Q3" | "Q4") => {
+  const getVatStatusBadge = (clientId: number, quarter: "Q1" | "Q2" | "Q3" | "Q4", urgency: LicenseUrgency = "normal") => {
     const record = getVatRecord(clientId, quarter);
 
     if (!record || record.isActive === "false") {
@@ -461,13 +461,14 @@ export default function Clients() {
     const startLabel = formatPeriodMonth(record?.vatPeriodStart);
     const endLabel = formatPeriodMonth(record?.vatPeriodEnd);
     const periodLabel = startLabel && endLabel ? `${startLabel} – ${endLabel}` : startLabel || endLabel || "-";
+    const labelColor = urgency !== "normal" ? URGENCY_TEXT[urgency] : "text-muted-foreground";
 
     if (record) {
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex flex-col items-center gap-0.5 w-full cursor-pointer hover:bg-muted/50 rounded p-1 -m-1 transition-colors" data-testid={`vat-status-${clientId}-${quarter}`}>
-              <span className="text-[10px] font-medium text-muted-foreground text-center">
+              <span className={cn("text-[10px] font-semibold text-center", labelColor)}>
                 {periodLabel}
               </span>
               <StatusBadge status={status} variant={variant} className="w-fit text-[10px] px-1.5 h-5" />
@@ -1278,16 +1279,16 @@ export default function Clients() {
                             </TableCell>
 
                             <TableCell className={cn("border-l border-r text-center", vQ1 !== "normal" ? URGENCY_VAT_CELL[vQ1] : "bg-primary/5 border-border/30")}>
-                              {getVatStatusBadge(client.id, "Q1")}
+                              {getVatStatusBadge(client.id, "Q1", vQ1)}
                             </TableCell>
                             <TableCell className={cn("border-r text-center", vQ2 !== "normal" ? URGENCY_VAT_CELL[vQ2] : "border-border/30")}>
-                              {getVatStatusBadge(client.id, "Q2")}
+                              {getVatStatusBadge(client.id, "Q2", vQ2)}
                             </TableCell>
                             <TableCell className={cn("border-r text-center", vQ3 !== "normal" ? URGENCY_VAT_CELL[vQ3] : "bg-primary/5 border-border/30")}>
-                              {getVatStatusBadge(client.id, "Q3")}
+                              {getVatStatusBadge(client.id, "Q3", vQ3)}
                             </TableCell>
                             <TableCell className={cn("border-r text-center", vQ4 !== "normal" ? URGENCY_VAT_CELL[vQ4] : "border-border/30")}>
-                              {getVatStatusBadge(client.id, "Q4")}
+                              {getVatStatusBadge(client.id, "Q4", vQ4)}
                             </TableCell>
 
                             {canManageClients && (
