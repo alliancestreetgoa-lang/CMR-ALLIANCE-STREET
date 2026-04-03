@@ -1385,6 +1385,78 @@ Only include clients with actual issues in atRiskClients. Keep insights and reco
     }
   });
 
+  app.post("/api/ai/client-query", authenticate, requireRole("super_admin", "admin"), async (req, res) => {
+    try {
+      const { question } = req.body;
+      if (!question || typeof question !== "string" || question.trim().length === 0) {
+        return res.status(400).json({ message: "A question is required." });
+      }
+
+      const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+      const baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || undefined;
+
+      if (!apiKey) return res.status(400).json({ message: "OpenAI API key not configured" });
+
+      const openaiClient = new OpenAI({ apiKey, baseURL });
+
+      const [allClients, allVat] = await Promise.all([
+        storage.getClients(),
+        storage.getVatRecords(),
+      ]);
+
+      const today = new Date();
+      const todayStr = today.toISOString().split("T")[0];
+
+      const vatMap: Record<number, typeof allVat> = {};
+      for (const v of allVat) {
+        if (!vatMap[v.clientId]) vatMap[v.clientId] = [];
+        vatMap[v.clientId].push(v);
+      }
+
+      const clientSummaries = allClients.map(c => {
+        const vats = vatMap[c.id] || [];
+        const activeVats = vats.filter(v => v.isActive !== "false");
+        let licenseInfo = "No license date";
+        if (c.licenseExpiryDate) {
+          const expiry = new Date(c.licenseExpiryDate);
+          const days = Math.ceil((expiry.getTime() - today.getTime()) / 86400000);
+          licenseInfo = days < 0 ? `EXPIRED ${Math.abs(days)}d ago` : `Expires in ${days}d (${c.licenseExpiryDate})`;
+        }
+        return {
+          id: c.id,
+          name: c.companyName,
+          country: c.country,
+          status: c.status,
+          license: licenseInfo,
+          corpTax: { start: c.corporateTaxStartMonth, end: c.corporateTaxEndMonth, due: c.corporateTaxDueDate },
+          vatQuarters: activeVats.map(v => ({ q: v.vatQuarter, period: `${v.vatPeriodStart}→${v.vatPeriodEnd}`, status: v.status, due: v.vatDueDate })),
+        };
+      });
+
+      const prompt = `You are a helpful AI assistant for Alliance Street Accounting. Today is ${todayStr}.
+You have access to ${allClients.length} client records shown below.
+
+CLIENT DATA:
+${JSON.stringify(clientSummaries, null, 2)}
+
+Answer the following question using the client data above. Be specific — name actual clients, quote numbers, and give concrete answers. Write in plain, easy-to-read text. Use bullet points only when listing multiple items.
+
+Question: ${question.trim()}`;
+
+      const response = await openaiClient.chat.completions.create({
+        model: "gpt-5-mini",
+        messages: [{ role: "user", content: prompt }],
+        max_completion_tokens: 1000,
+      });
+
+      const answer = response.choices[0]?.message?.content?.trim() || "I could not generate an answer.";
+      res.json({ answer });
+    } catch (err: any) {
+      console.error("AI client query error:", err);
+      res.status(500).json({ message: "Failed to query AI: " + err.message });
+    }
+  });
+
   // ===== HR - ATTENDANCE =====
 
   app.get("/api/hr/attendance", authenticate, requireRole("super_admin"), async (req, res) => {

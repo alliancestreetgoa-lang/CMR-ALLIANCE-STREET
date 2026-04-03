@@ -1,5 +1,5 @@
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { 
@@ -38,7 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { MoreHorizontal, Plus, Download, Search, Loader2, Trash2, Building2, CircleCheck, CircleMinus, Globe, Sparkles, ChevronDown, ChevronUp, Lightbulb, AlertTriangle, ShieldCheck } from "lucide-react";
+import { MoreHorizontal, Plus, Download, Search, Loader2, Trash2, Building2, CircleCheck, CircleMinus, Globe, Sparkles, ChevronDown, ChevronUp, Lightbulb, AlertTriangle, ShieldCheck, Send, MessageSquare, X } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -261,6 +261,13 @@ export default function Clients() {
   } | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
 
+  const [queryInput, setQueryInput] = useState("");
+  const [queryLoading, setQueryLoading] = useState(false);
+  const [queryAnswer, setQueryAnswer] = useState<string | null>(null);
+  const [queryError, setQueryError] = useState<string | null>(null);
+  const [queryHistory, setQueryHistory] = useState<Array<{ question: string; answer: string }>>([]);
+  const queryPanelRef = useRef<HTMLDivElement>(null);
+
   async function fetchAiInsights() {
     setAiLoading(true);
     setAiError(null);
@@ -273,6 +280,27 @@ export default function Clients() {
       toast({ title: "AI Error", description: err.message || "Failed to get AI insights", variant: "destructive" });
     } finally {
       setAiLoading(false);
+    }
+  }
+
+  async function handleClientQuery() {
+    if (!queryInput.trim()) return;
+    const question = queryInput.trim();
+    setQueryLoading(true);
+    setQueryError(null);
+    setQueryAnswer(null);
+    try {
+      const result = await api.post("/api/ai/client-query", { question });
+      setQueryAnswer(result.answer);
+      setQueryHistory(prev => [...prev, { question, answer: result.answer }]);
+      setQueryInput("");
+      setTimeout(() => {
+        queryPanelRef.current?.scrollTo({ top: queryPanelRef.current.scrollHeight, behavior: "smooth" });
+      }, 100);
+    } catch (err: any) {
+      setQueryError(err.message || "Failed to get an answer");
+    } finally {
+      setQueryLoading(false);
     }
   }
 
@@ -999,6 +1027,83 @@ export default function Clients() {
                 </Card>
               );
             })}
+          </div>
+        )}
+
+        {/* Ask Anything Panel */}
+        {canManageClients && (
+          <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 dark:border-indigo-800 dark:bg-indigo-950/30 overflow-hidden">
+            <div className="px-4 py-3 flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900 shrink-0">
+                <MessageSquare className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-sm text-indigo-900 dark:text-indigo-100">Ask Anything About Your Clients</h3>
+                <p className="text-xs text-indigo-600 dark:text-indigo-400">Ask in plain English — counts, statuses, due dates, trends, and more.</p>
+              </div>
+              {queryHistory.length > 0 && (
+                <button
+                  className="text-xs text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-200 transition-colors"
+                  onClick={() => { setQueryHistory([]); setQueryAnswer(null); setQueryError(null); }}
+                  data-testid="button-clear-query-history"
+                >
+                  Clear history
+                </button>
+              )}
+            </div>
+
+            {/* Chat history */}
+            {(queryHistory.length > 0 || queryLoading) && (
+              <div ref={queryPanelRef} className="px-4 pb-2 space-y-3 max-h-80 overflow-y-auto">
+                {queryHistory.map((item, i) => (
+                  <div key={i} className="space-y-1.5">
+                    <div className="flex items-start gap-2">
+                      <span className="mt-0.5 shrink-0 inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-200 dark:bg-indigo-800">
+                        <span className="text-[9px] font-bold text-indigo-700 dark:text-indigo-300">Q</span>
+                      </span>
+                      <p className="text-xs font-medium text-indigo-900 dark:text-indigo-100">{item.question}</p>
+                    </div>
+                    <div className="flex items-start gap-2 ml-7">
+                      <p className="text-xs text-indigo-800 dark:text-indigo-200 whitespace-pre-wrap leading-relaxed bg-white/60 dark:bg-black/20 rounded-md px-3 py-2 border border-indigo-100 dark:border-indigo-800 w-full">{item.answer}</p>
+                    </div>
+                  </div>
+                ))}
+                {queryLoading && (
+                  <div className="flex items-center gap-2 ml-7">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-500" />
+                    <span className="text-xs text-indigo-500 italic">Thinking...</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Input area */}
+            <div className="px-4 pb-4">
+              {queryError && (
+                <p className="text-xs text-red-600 dark:text-red-400 mb-2">{queryError}</p>
+              )}
+              <div className="flex gap-2">
+                <Input
+                  data-testid="input-ai-query"
+                  placeholder="e.g. Which clients have licenses expiring this month? How many UAE clients have overdue VAT?"
+                  value={queryInput}
+                  onChange={e => setQueryInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && !queryLoading) { e.preventDefault(); handleClientQuery(); } }}
+                  className="flex-1 bg-white dark:bg-black/20 border-indigo-200 dark:border-indigo-700 text-sm focus-visible:ring-indigo-400"
+                  disabled={queryLoading}
+                />
+                <Button
+                  data-testid="button-submit-ai-query"
+                  onClick={handleClientQuery}
+                  disabled={queryLoading || !queryInput.trim()}
+                  size="default"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0"
+                >
+                  {queryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </Button>
+              </div>
+              <p className="text-[10px] text-indigo-500 dark:text-indigo-400 mt-1.5">Press Enter to send</p>
+            </div>
           </div>
         )}
 
