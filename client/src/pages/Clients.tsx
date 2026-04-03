@@ -687,8 +687,8 @@ export default function Clients() {
                         return (
                           <div key={q} className="grid grid-cols-[60px_1fr_1fr_auto] gap-2 items-center">
                             <Label className="text-xs text-muted-foreground">{q}</Label>
-                            <Input data-testid={`input-vat-${q.toLowerCase()}-start`} type="date" placeholder="Start" value={formData[startKey] as string} onChange={(e) => setFormData({ ...formData, [startKey]: e.target.value })} disabled={!isActive} />
-                            <Input data-testid={`input-vat-${q.toLowerCase()}-end`} type="date" placeholder="End" value={formData[endKey] as string} onChange={(e) => setFormData({ ...formData, [endKey]: e.target.value })} disabled={!isActive} />
+                            <Input data-testid={`input-vat-${q.toLowerCase()}-start`} type="month" placeholder="Start" value={(formData[startKey] as string)?.substring(0, 7) || ""} onChange={(e) => setFormData({ ...formData, [startKey]: e.target.value })} disabled={!isActive} />
+                            <Input data-testid={`input-vat-${q.toLowerCase()}-end`} type="month" placeholder="End" value={(formData[endKey] as string)?.substring(0, 7) || ""} onChange={(e) => setFormData({ ...formData, [endKey]: e.target.value })} disabled={!isActive} />
                             <Button
                               type="button"
                               size="sm"
@@ -1175,17 +1175,17 @@ export default function Clients() {
                         <>
                           <Input
                             data-testid={`input-edit-vat-${q.toLowerCase()}-start`}
-                            type="date"
+                            type="month"
                             placeholder="Start"
-                            value={editFormData[startKey] as string}
+                            value={(editFormData[startKey] as string)?.substring(0, 7) || ""}
                             onChange={e => setEditFormData({ ...editFormData, [startKey]: e.target.value })}
                             className="flex-1 text-sm"
                           />
                           <Input
                             data-testid={`input-edit-vat-${q.toLowerCase()}-end`}
-                            type="date"
+                            type="month"
                             placeholder="End"
-                            value={editFormData[endKey] as string}
+                            value={(editFormData[endKey] as string)?.substring(0, 7) || ""}
                             onChange={e => setEditFormData({ ...editFormData, [endKey]: e.target.value })}
                             className="flex-1 text-sm"
                           />
