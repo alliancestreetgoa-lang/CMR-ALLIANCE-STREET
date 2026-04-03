@@ -348,6 +348,16 @@ export default function Clients() {
     }
   };
 
+  const formatPeriodMonth = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return "";
+    try {
+      const normalized = dateStr.length === 7 ? dateStr + "-01" : dateStr;
+      return format(new Date(normalized), "MMMM yyyy");
+    } catch {
+      return dateStr;
+    }
+  };
+
   const getVatStatusBadge = (clientId: number, quarter: "Q1" | "Q2" | "Q3" | "Q4") => {
     const record = getVatRecord(clientId, quarter);
 
@@ -363,13 +373,17 @@ export default function Clients() {
     if (status === "In Progress") variant = "warning";
     if (status === "Not Started") variant = "secondary";
 
+    const startLabel = formatPeriodMonth(record?.vatPeriodStart);
+    const endLabel = formatPeriodMonth(record?.vatPeriodEnd);
+    const periodLabel = startLabel && endLabel ? `${startLabel} – ${endLabel}` : startLabel || endLabel || "-";
+
     if (record) {
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex flex-col gap-0.5 min-w-[100px] text-left cursor-pointer hover:bg-muted/50 rounded p-1 -m-1 transition-colors" data-testid={`vat-status-${clientId}-${quarter}`}>
               <span className="text-[10px] font-medium text-muted-foreground">
-                {record?.vatDueDate ? format(new Date(record.vatDueDate), "MMM yyyy") : "-"}
+                {periodLabel}
               </span>
               <StatusBadge status={status} variant={variant} className="w-fit text-[10px] px-1.5 h-5" />
             </button>
@@ -394,7 +408,7 @@ export default function Clients() {
 
     return (
       <div className="flex flex-col gap-0.5 min-w-[100px]">
-        <span className="text-[10px] font-medium text-muted-foreground">—</span>
+        <span className="text-[10px] font-medium text-muted-foreground">{periodLabel}</span>
         <StatusBadge status={status} variant={variant} className="w-fit text-[10px] px-1.5 h-5" />
       </div>
     );
